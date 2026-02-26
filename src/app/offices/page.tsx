@@ -6,6 +6,8 @@ import Container from '@/components/Container'
 import Card from '@/components/Card'
 import styles from './page.module.css'
 
+export const dynamic = 'force-dynamic'
+
 interface BrandKit {
   id: string
   mode: string
