@@ -88,26 +88,22 @@ export async function POST(request: Request) {
       { access: 'public' }
     )
 
-    const result = await db.transaction(async (tx) => {
-      const [office] = await tx
-        .insert(offices)
-        .values({ name: parsed.data.name })
-        .returning()
+    const [office] = await db
+      .insert(offices)
+      .values({ name: parsed.data.name })
+      .returning()
 
-      const [brandKit] = await tx
-        .insert(brandKits)
-        .values({
-          officeId: office.id,
-          mode: 'manual',
-          primaryColor: parsed.data.primary_color,
-          logoUrl: logoBlob.url,
-        })
-        .returning()
+    const [brandKit] = await db
+      .insert(brandKits)
+      .values({
+        officeId: office.id,
+        mode: 'manual',
+        primaryColor: parsed.data.primary_color,
+        logoUrl: logoBlob.url,
+      })
+      .returning()
 
-      return { office, brandKit }
-    })
-
-    return NextResponse.json(result, { status: 201 })
+    return NextResponse.json({ office, brandKit }, { status: 201 })
   }
 
   if (rawMode === 'uploaded') {
@@ -133,25 +129,21 @@ export async function POST(request: Request) {
       { access: 'public' }
     )
 
-    const result = await db.transaction(async (tx) => {
-      const [office] = await tx
-        .insert(offices)
-        .values({ name: parsed.data.name })
-        .returning()
+    const [office] = await db
+      .insert(offices)
+      .values({ name: parsed.data.name })
+      .returning()
 
-      const [brandKit] = await tx
-        .insert(brandKits)
-        .values({
-          officeId: office.id,
-          mode: 'uploaded',
-          guidelinesPdfUrl: pdfBlob.url,
-        })
-        .returning()
+    const [brandKit] = await db
+      .insert(brandKits)
+      .values({
+        officeId: office.id,
+        mode: 'uploaded',
+        guidelinesPdfUrl: pdfBlob.url,
+      })
+      .returning()
 
-      return { office, brandKit }
-    })
-
-    return NextResponse.json(result, { status: 201 })
+    return NextResponse.json({ office, brandKit }, { status: 201 })
   }
 
   return NextResponse.json(
