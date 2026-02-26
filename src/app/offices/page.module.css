@@ -1,0 +1,149 @@
+.main {
+  min-height: 100vh;
+  padding: 48px 0;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.back {
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.heading {
+  font-size: 2rem;
+}
+
+.newBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.newBtn:hover {
+  background: var(--primaryHover);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.emptyLink {
+  color: var(--primary);
+  text-decoration: underline;
+  font-size: 0.9375rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.officeName {
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badgeManual {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.badgeUploaded {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.kitDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorSwatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.colorHex {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.assetLink {
+  font-size: 0.875rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.assetLink:hover {
+  text-decoration: underline;
+}

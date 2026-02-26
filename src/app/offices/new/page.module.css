@@ -1,0 +1,145 @@
+.main {
+  min-height: 100vh;
+  padding: 48px 0;
+}
+
+.header {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.back {
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.heading {
+  font-size: 2rem;
+}
+
+.form {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+}
+
+.legend {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.radioLabel:hover {
+  border-color: var(--primary);
+}
+
+.radioLabelActive {
+  border-color: var(--primary);
+  background: rgba(26, 26, 26, 0.03);
+}
+
+.radioInput {
+  display: none;
+}
+
+.radioTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.radioDesc {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.manualFields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.colorLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.colorInput {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px;
+  background: var(--card);
+}
+
+.colorHex {
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.error {
+  font-size: 0.875rem;
+  color: #dc2626;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cancel {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.cancel:hover {
+  color: var(--text);
+}

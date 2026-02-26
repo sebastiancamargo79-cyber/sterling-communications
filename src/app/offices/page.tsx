@@ -1,0 +1,110 @@
+import Link from 'next/link'
+import Container from '@/components/Container'
+import Card from '@/components/Card'
+import styles from './page.module.css'
+
+interface BrandKit {
+  id: string
+  mode: string
+  primaryColor: string | null
+  logoUrl: string | null
+  guidelinesPdfUrl: string | null
+}
+
+interface Office {
+  id: string
+  name: string
+  createdAt: string | null
+  brandKit: BrandKit | null
+}
+
+async function getOffices(): Promise<Office[]> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const res = await fetch(`${baseUrl}/api/offices`, { cache: 'no-store' })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.offices ?? []
+}
+
+export default async function OfficesPage() {
+  const offices = await getOffices()
+
+  return (
+    <main className={styles.main}>
+      <Container>
+        <div className={styles.topBar}>
+          <div>
+            <a href="/" className={styles.back}>← Home</a>
+            <h1 className={styles.heading}>Offices</h1>
+          </div>
+          <Link href="/offices/new" className={styles.newBtn}>
+            + New Office
+          </Link>
+        </div>
+
+        {offices.length === 0 ? (
+          <div className={styles.empty}>
+            <p>No offices yet.</p>
+            <Link href="/offices/new" className={styles.emptyLink}>
+              Create your first office
+            </Link>
+          </div>
+        ) : (
+          <div className={styles.grid}>
+            {offices.map((office) => (
+              <Card key={office.id}>
+                <div className={styles.cardContent}>
+                  <div className={styles.cardTop}>
+                    <h2 className={styles.officeName}>{office.name}</h2>
+                    {office.brandKit && (
+                      <span className={`${styles.badge} ${office.brandKit.mode === 'manual' ? styles.badgeManual : styles.badgeUploaded}`}>
+                        {office.brandKit.mode === 'manual' ? 'Manual' : 'Uploaded'}
+                      </span>
+                    )}
+                  </div>
+
+                  {office.brandKit && (
+                    <div className={styles.kitDetails}>
+                      {office.brandKit.mode === 'manual' && office.brandKit.primaryColor && (
+                        <div className={styles.colorRow}>
+                          <span
+                            className={styles.colorSwatch}
+                            style={{ background: office.brandKit.primaryColor }}
+                          />
+                          <span className={styles.colorHex}>{office.brandKit.primaryColor}</span>
+                        </div>
+                      )}
+
+                      <div className={styles.links}>
+                        {office.brandKit.logoUrl && (
+                          <a
+                            href={office.brandKit.logoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.assetLink}
+                          >
+                            View Logo ↗
+                          </a>
+                        )}
+                        {office.brandKit.guidelinesPdfUrl && (
+                          <a
+                            href={office.brandKit.guidelinesPdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.assetLink}
+                          >
+                            View PDF ↗
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Container>
+    </main>
+  )
+}
