@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { eq } from 'drizzle-orm'
+import { db } from '@/db'
+import { offices as officesTable, brandKits } from '@/db/schema'
 import Container from '@/components/Container'
 import Card from '@/components/Card'
 import styles from './page.module.css'
@@ -14,16 +17,32 @@ interface BrandKit {
 interface Office {
   id: string
   name: string
-  createdAt: string | null
+  createdAt: Date | null
   brandKit: BrandKit | null
 }
 
 async function getOffices(): Promise<Office[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/offices`, { cache: 'no-store' })
-  if (!res.ok) return []
-  const data = await res.json()
-  return data.offices ?? []
+  const rows = await db
+    .select()
+    .from(officesTable)
+    .leftJoin(brandKits, eq(brandKits.officeId, officesTable.id))
+
+  const map = new Map<string, Office>()
+  for (const row of rows) {
+    const o = row.offices
+    const bk = row.brand_kits
+    if (!map.has(o.id)) {
+      map.set(o.id, {
+        id: o.id,
+        name: o.name,
+        createdAt: o.createdAt,
+        brandKit: bk
+          ? { id: bk.id, mode: bk.mode, primaryColor: bk.primaryColor, logoUrl: bk.logoUrl, guidelinesPdfUrl: bk.guidelinesPdfUrl }
+          : null,
+      })
+    }
+  }
+  return Array.from(map.values())
 }
 
 export default async function OfficesPage() {
