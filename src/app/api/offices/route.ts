@@ -11,8 +11,6 @@ export async function GET() {
     .from(offices)
     .leftJoin(brandKits, eq(brandKits.officeId, offices.id))
 
-  // Group by office (an office may appear multiple times if it had multiple brand kits,
-  // but we insert exactly one per office, so this just normalises the join shape)
   const map = new Map<string, {
     id: string
     name: string
@@ -61,93 +59,129 @@ const uploadedSchema = z.object({
   mode: z.literal('uploaded'),
 })
 
+function errMsg(step: string, e: unknown) {
+  const msg = e instanceof Error ? e.message : String(e)
+  return NextResponse.json({ error: `[${step}] ${msg}` }, { status: 500 })
+}
+
 export async function POST(request: Request) {
-  const formData = await request.formData()
+  // Step 1: parse form data
+  let formData: FormData
+  try {
+    formData = await request.formData()
+  } catch (e) {
+    return NextResponse.json(
+      { error: `[parse-form] ${e instanceof Error ? e.message : String(e)}` },
+      { status: 400 }
+    )
+  }
 
   const rawMode = formData.get('mode')
   const rawName = formData.get('name')
 
   if (rawMode === 'manual') {
+    // Step 2: validate fields
     const parsed = manualSchema.safeParse({
       name: rawName,
       mode: rawMode,
       primary_color: formData.get('primary_color'),
     })
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return NextResponse.json(
+        { error: `[validate] ${JSON.stringify(parsed.error.flatten())}` },
+        { status: 400 }
+      )
     }
 
+    // Step 3: check file present
     const logoFile = formData.get('logo')
     if (!logoFile || !(logoFile instanceof File)) {
-      return NextResponse.json({ error: 'logo file is required for manual mode' }, { status: 400 })
+      return NextResponse.json(
+        { error: '[file-check] logo file is missing or not a File' },
+        { status: 400 }
+      )
     }
 
-    const logoBlob = await put(
-      `logos/${Date.now()}-${logoFile.name}`,
-      logoFile,
-      { access: 'public' }
-    )
+    // Step 4: upload to Vercel Blob
+    let logoUrl: string
+    try {
+      const blob = await put(`logos/${Date.now()}-${logoFile.name}`, logoFile, { access: 'public' })
+      logoUrl = blob.url
+    } catch (e) {
+      return errMsg('blob-upload-logo', e)
+    }
 
-    const [office] = await db
-      .insert(offices)
-      .values({ name: parsed.data.name })
-      .returning()
+    // Step 5: insert office
+    let office: typeof offices.$inferSelect
+    try {
+      ;[office] = await db.insert(offices).values({ name: parsed.data.name }).returning()
+    } catch (e) {
+      return errMsg('db-insert-office', e)
+    }
 
-    const [brandKit] = await db
-      .insert(brandKits)
-      .values({
-        officeId: office.id,
-        mode: 'manual',
-        primaryColor: parsed.data.primary_color,
-        logoUrl: logoBlob.url,
-      })
-      .returning()
+    // Step 6: insert brand kit
+    let brandKit: typeof brandKits.$inferSelect
+    try {
+      ;[brandKit] = await db
+        .insert(brandKits)
+        .values({ officeId: office.id, mode: 'manual', primaryColor: parsed.data.primary_color, logoUrl })
+        .returning()
+    } catch (e) {
+      return errMsg('db-insert-brandkit', e)
+    }
 
     return NextResponse.json({ office, brandKit }, { status: 201 })
   }
 
   if (rawMode === 'uploaded') {
-    const parsed = uploadedSchema.safeParse({
-      name: rawName,
-      mode: rawMode,
-    })
+    // Step 2: validate fields
+    const parsed = uploadedSchema.safeParse({ name: rawName, mode: rawMode })
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-    }
-
-    const pdfFile = formData.get('guidelines_pdf')
-    if (!pdfFile || !(pdfFile instanceof File)) {
       return NextResponse.json(
-        { error: 'guidelines_pdf file is required for uploaded mode' },
+        { error: `[validate] ${JSON.stringify(parsed.error.flatten())}` },
         { status: 400 }
       )
     }
 
-    const pdfBlob = await put(
-      `guidelines/${Date.now()}-${pdfFile.name}`,
-      pdfFile,
-      { access: 'public' }
-    )
+    // Step 3: check file present
+    const pdfFile = formData.get('guidelines_pdf')
+    if (!pdfFile || !(pdfFile instanceof File)) {
+      return NextResponse.json(
+        { error: '[file-check] guidelines_pdf is missing or not a File' },
+        { status: 400 }
+      )
+    }
 
-    const [office] = await db
-      .insert(offices)
-      .values({ name: parsed.data.name })
-      .returning()
+    // Step 4: upload to Vercel Blob
+    let guidelinesPdfUrl: string
+    try {
+      const blob = await put(`guidelines/${Date.now()}-${pdfFile.name}`, pdfFile, { access: 'public' })
+      guidelinesPdfUrl = blob.url
+    } catch (e) {
+      return errMsg('blob-upload-pdf', e)
+    }
 
-    const [brandKit] = await db
-      .insert(brandKits)
-      .values({
-        officeId: office.id,
-        mode: 'uploaded',
-        guidelinesPdfUrl: pdfBlob.url,
-      })
-      .returning()
+    // Step 5: insert office
+    let office: typeof offices.$inferSelect
+    try {
+      ;[office] = await db.insert(offices).values({ name: parsed.data.name }).returning()
+    } catch (e) {
+      return errMsg('db-insert-office', e)
+    }
+
+    // Step 6: insert brand kit
+    let brandKit: typeof brandKits.$inferSelect
+    try {
+      ;[brandKit] = await db
+        .insert(brandKits)
+        .values({ officeId: office.id, mode: 'uploaded', guidelinesPdfUrl })
+        .returning()
+    } catch (e) {
+      return errMsg('db-insert-brandkit', e)
+    }
 
     return NextResponse.json({ office, brandKit }, { status: 201 })
   }
 
-  return NextResponse.json(
-    { error: 'mode must be "manual" or "uploaded"' },
-    { status: 400 }
-  )
+  return NextResponse.json({ error: 'mode must be "manual" or "uploaded"' }, { status: 400 })
 }
