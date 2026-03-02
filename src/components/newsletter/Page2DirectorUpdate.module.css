@@ -1,0 +1,53 @@
+.heading {
+  font-size: 18pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  color: var(--hi-green);
+  margin: 0 0 2mm;
+}
+
+.body {
+  font-size: 10pt;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 2mm;
+}
+
+.body p {
+  margin: 0 0 2.5mm;
+}
+
+.body em {
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+}
+
+.pullQuote {
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+  font-size: 12pt;
+  text-align: center;
+  color: var(--hi-green2);
+  margin: 3mm 10mm;
+  padding: 0;
+  border: none;
+  line-height: 1.5;
+}
+
+.signature {
+  margin-top: 3mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+}
+
+.sigName {
+  font-weight: 700;
+  font-size: 10pt;
+  color: var(--text);
+}
+
+.sigTitle {
+  font-size: 9pt;
+  color: #555;
+}

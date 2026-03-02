@@ -1,0 +1,40 @@
+.headline {
+  font-size: 22pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  color: var(--hi-green);
+  margin: 0 0 2mm;
+  line-height: 1.2;
+}
+
+.imageStrip {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  margin: 2mm 0;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.body {
+  columns: 2;
+  column-gap: 6mm;
+  font-size: 9.5pt;
+  line-height: 1.65;
+  color: var(--text);
+  margin-top: 2mm;
+}
+
+.body p {
+  margin: 0 0 2mm;
+}
+
+.body em {
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+}

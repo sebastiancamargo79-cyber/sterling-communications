@@ -1,0 +1,77 @@
+.wrapper {
+  background: #e0e0e0;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.printBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.printBarTitle {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+  margin-right: auto;
+}
+
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+
+.errorBox {
+  background: #fff3f3;
+  border: 2px solid #c0392b;
+  border-radius: 6px;
+  padding: 2rem;
+  max-width: 700px;
+  margin: 2rem auto;
+}
+
+.errorBox h1 {
+  color: #c0392b;
+  margin: 0 0 1rem;
+  font-size: 18px;
+}
+
+.errorBox ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.errorBox li {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-family: monospace;
+}
+
+.fieldPath {
+  font-weight: 700;
+  color: #333;
+}
+
+.fieldMsg {
+  color: #c0392b;
+}
+
+@media print {
+  .wrapper {
+    background: #fff;
+    padding: 0;
+  }
+
+  .printBar {
+    display: none;
+  }
+
+  .pages {
+    gap: 0;
+  }
+}

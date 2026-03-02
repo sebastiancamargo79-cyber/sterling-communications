@@ -1,0 +1,68 @@
+.heading {
+  font-size: 18pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  color: var(--hi-green);
+  margin: 0 0 2mm;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4mm;
+  height: calc(100% - 36mm);
+}
+
+.card {
+  background: var(--hi-grey);
+  border-left: 3px solid var(--hi-green);
+  padding: 3mm;
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardPhoto {
+  width: 100%;
+  height: 28mm;
+  object-fit: cover;
+  border-radius: 1px;
+  display: block;
+}
+
+.caption {
+  font-size: 8pt;
+  color: #555;
+  margin: 1.5mm 0 0;
+  font-style: italic;
+}
+
+.eventTitle {
+  font-size: 10pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  color: var(--hi-green2);
+  margin: 0 0 1mm;
+}
+
+.eventMeta {
+  font-size: 8.5pt;
+  color: var(--text);
+  margin: 0 0 1mm;
+}
+
+.eventLocation {
+  font-size: 8.5pt;
+  color: #555;
+  margin: 0 0 1mm;
+  font-style: italic;
+}
+
+.eventDesc {
+  font-size: 8.5pt;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+}

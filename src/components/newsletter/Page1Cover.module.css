@@ -1,0 +1,96 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2mm;
+}
+
+.logo {
+  background: var(--hi-green);
+  width: 50mm;
+  height: 20mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
+.logoText {
+  color: #fff;
+  font-size: 13pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  letter-spacing: 0.03em;
+}
+
+.metaLine {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.month {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--hi-green);
+  font-family: var(--font-heading), Georgia, serif;
+}
+
+.officeName {
+  font-size: 9pt;
+  color: #555;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.heroWrap {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  margin: 3mm 0;
+}
+
+.hero {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.teasers {
+  margin-top: 4mm;
+}
+
+.teaserHeading {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--hi-green);
+  font-family: var(--font-heading), Georgia, serif;
+  margin: 0 0 2mm;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.teaserList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.teaserList li {
+  font-size: 10pt;
+  padding-left: 6mm;
+  position: relative;
+  color: var(--text);
+}
+
+.teaserList li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--hi-green);
+}
