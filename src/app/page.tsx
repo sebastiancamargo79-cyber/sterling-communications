@@ -16,6 +16,12 @@ export default function HomePage() {
             <Link href="/offices" className={styles.btnSecondary}>
               View Offices
             </Link>
+            <Link href="/newsletter/editor" className={styles.btnSecondary}>
+              Edit Newsletter
+            </Link>
+            <Link href="/newsletter/preview" className={styles.btnSecondary}>
+              Preview Newsletter
+            </Link>
           </div>
         </div>
       </Container>

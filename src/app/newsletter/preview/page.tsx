@@ -11,11 +11,11 @@ import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
-export default function NewsletterPreview() {
+export default async function NewsletterPreview() {
   let data
 
   try {
-    data = parseNewsletter()
+    data = await parseNewsletter()
   } catch (err) {
     if (err instanceof ZodError) {
       return (

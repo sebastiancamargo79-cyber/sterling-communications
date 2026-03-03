@@ -1,5 +1,13 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
 
+export const newsletterDrafts = pgTable('newsletter_drafts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(),
+  rawContent: text('raw_content').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+
 export const offices = pgTable('offices', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
