@@ -1,11 +1,14 @@
 :root {
   --bg: #f9f8f6;
   --card: #ffffff;
-  --text: #1a1a1a;
-  --muted: #6b7280;
-  --border: #e5e2dc;
-  --primary: #1a1a1a;
-  --primaryHover: #2d2d2d;
+  --text: #10263B;
+  --muted: #5a6a7a;
+  --border: #B8965A;
+  --borderLight: #e8e0d4;
+  --primary: #10263B;
+  --primaryHover: #1a3a52;
+  --accent: #B8965A;
+  --accentHover: #9a7a48;
   --radius: 12px;
   --font-heading: 'Libre Baskerville', Georgia, serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

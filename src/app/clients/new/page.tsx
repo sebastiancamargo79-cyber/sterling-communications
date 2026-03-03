@@ -10,12 +10,12 @@ import styles from './page.module.css'
 
 type Mode = 'manual' | 'uploaded'
 
-export default function NewOfficePage() {
+export default function NewClientPage() {
   const router = useRouter()
 
   const [name, setName] = useState('')
   const [mode, setMode] = useState<Mode>('manual')
-  const [primaryColor, setPrimaryColor] = useState('#1a1a1a')
+  const [primaryColor, setPrimaryColor] = useState('#10263B')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -26,7 +26,7 @@ export default function NewOfficePage() {
     setError(null)
 
     if (!name.trim()) {
-      setError('Office name is required.')
+      setError('Client name is required.')
       return
     }
     if (mode === 'manual' && !logoFile) {
@@ -51,13 +51,13 @@ export default function NewOfficePage() {
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/offices', { method: 'POST', body: formData })
+      const res = await fetch('/api/clients', { method: 'POST', body: formData })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         setError(body?.error ?? 'Something went wrong. Please try again.')
         return
       }
-      router.push('/offices')
+      router.push('/clients')
     } catch {
       setError('Network error. Please check your connection and try again.')
     } finally {
@@ -69,16 +69,16 @@ export default function NewOfficePage() {
     <main className={styles.main}>
       <Container>
         <div className={styles.header}>
-          <a href="/offices" className={styles.back}>← Offices</a>
-          <h1 className={styles.heading}>Create Office</h1>
+          <a href="/clients" className={styles.back}>← Clients</a>
+          <h1 className={styles.heading}>Create Client</h1>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input
-            label="Office name"
+            label="Client name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. London HQ"
+            placeholder="e.g. Home Instead London"
           />
 
           <fieldset className={styles.fieldset}>
@@ -150,9 +150,9 @@ export default function NewOfficePage() {
 
           <div className={styles.actions}>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create Office'}
+              {submitting ? 'Creating…' : 'Create Client'}
             </Button>
-            <a href="/offices" className={styles.cancel}>Cancel</a>
+            <a href="/clients" className={styles.cancel}>Cancel</a>
           </div>
         </form>
       </Container>

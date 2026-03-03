@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { getModuleDef } from '@/lib/module-registry'
+import { getAllModuleDefs } from '@/lib/module-registry'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'moduleName and brief are required' }, { status: 400 })
   }
 
-  const def = getModuleDef(moduleName)
+  const allDefs = await getAllModuleDefs()
+  const def = allDefs.find((m) => m.name === moduleName)
   if (!def) {
     return NextResponse.json({ error: `Unknown module: ${moduleName}` }, { status: 400 })
   }

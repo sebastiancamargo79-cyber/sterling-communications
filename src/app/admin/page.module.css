@@ -1,38 +1,42 @@
 .main {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
+  padding: 48px 0;
 }
 
-.hero {
-  padding: 80px 0;
+.header {
+  margin-bottom: 40px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
+}
+
+.back {
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--text);
 }
 
 .heading {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-size: 2rem;
   color: var(--text);
 }
 
 .subtitle {
-  font-size: 1.125rem;
+  font-size: 0.9rem;
   color: var(--muted);
-  margin-bottom: 8px;
 }
 
-.navGrid {
+.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 16px;
-  margin-top: 16px;
-  max-width: 560px;
 }
 
-.navCard {
+.card {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -45,22 +49,22 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.navCard:hover {
+.card:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 20px rgba(184, 150, 90, 0.18);
+  box-shadow: 0 4px 16px rgba(184, 150, 90, 0.15);
 }
 
-.navCardIcon {
+.cardIcon {
   font-size: 1.5rem;
 }
 
-.navCardTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 600;
   font-family: var(--font-heading);
 }
 
-.navCardDesc {
+.cardDesc {
   font-size: 0.85rem;
   color: var(--muted);
   line-height: 1.5;

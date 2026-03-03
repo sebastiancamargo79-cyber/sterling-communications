@@ -1,0 +1,317 @@
+.main {
+  min-height: 100vh;
+  padding: 48px 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.back {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.heading {
+  font-size: 2rem;
+  color: var(--text);
+}
+
+.btnNew {
+  padding: 10px 22px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+
+.btnNew:hover {
+  background: var(--primaryHover);
+}
+
+/* Create form */
+.createForm {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
+}
+
+.formTitle {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.formInput {
+  padding: 9px 12px;
+  border: 1px solid var(--borderLight);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.formInput:focus {
+  border-color: var(--primary);
+}
+
+.formInput[readonly] {
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.formHint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.formTextarea {
+  padding: 9px 12px;
+  border: 1px solid var(--borderLight);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.formTextarea:focus {
+  border-color: var(--primary);
+}
+
+/* Fields builder */
+.fieldsBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fieldInput {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+}
+
+.fieldInput:focus {
+  border-color: var(--primary);
+}
+
+.fieldSelect {
+  padding: 7px 10px;
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  cursor: pointer;
+}
+
+.btnRemoveField {
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btnRemoveField:hover {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.btnAddField {
+  align-self: flex-start;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnAddField:hover {
+  background: rgba(184, 150, 90, 0.08);
+}
+
+.error {
+  font-size: 0.875rem;
+  color: #dc2626;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btnCreate {
+  padding: 10px 22px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCreate:hover:not(:disabled) {
+  background: var(--primaryHover);
+}
+
+.btnCreate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancelForm {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btnCancelForm:hover {
+  color: var(--text);
+}
+
+/* Module sections */
+.section {
+  margin-bottom: 40px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--borderLight);
+}
+
+.moduleList {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borderLight);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.moduleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--borderLight);
+  gap: 12px;
+}
+
+.moduleRow:last-child {
+  border-bottom: none;
+}
+
+.moduleName {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.moduleKey {
+  display: block;
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: var(--muted);
+}
+
+.badgeSystem {
+  padding: 3px 10px;
+  background: rgba(16, 38, 59, 0.08);
+  color: var(--primary);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgeCustom {
+  padding: 3px 10px;
+  background: rgba(184, 150, 90, 0.12);
+  color: var(--accent);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

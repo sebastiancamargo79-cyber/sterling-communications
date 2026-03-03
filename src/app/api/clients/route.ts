@@ -1,17 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import { put } from '@vercel/blob'
 import { z } from 'zod'
 import { db } from '@/db'
-import { offices, brandKits } from '@/db/schema'
+import { clients, brandKits, newsletterDrafts } from '@/db/schema'
 
 export async function GET() {
   const rows = await db
     .select()
-    .from(offices)
-    .leftJoin(brandKits, eq(brandKits.officeId, offices.id))
+    .from(clients)
+    .leftJoin(brandKits, eq(brandKits.clientId, clients.id))
+    .orderBy(asc(clients.name))
 
   const map = new Map<string, {
     id: string
@@ -27,13 +28,13 @@ export async function GET() {
   }>()
 
   for (const row of rows) {
-    const o = row.offices
+    const c = row.clients
     const bk = row.brand_kits
-    if (!map.has(o.id)) {
-      map.set(o.id, {
-        id: o.id,
-        name: o.name,
-        createdAt: o.createdAt,
+    if (!map.has(c.id)) {
+      map.set(c.id, {
+        id: c.id,
+        name: c.name,
+        createdAt: c.createdAt,
         brandKit: bk
           ? {
               id: bk.id,
@@ -47,7 +48,7 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ offices: Array.from(map.values()) })
+  return NextResponse.json({ clients: Array.from(map.values()) })
 }
 
 const manualSchema = z.object({
@@ -67,7 +68,6 @@ function errMsg(step: string, e: unknown) {
 }
 
 export async function POST(request: Request) {
-  // Step 1: parse form data
   let formData: FormData
   try {
     formData = await request.formData()
@@ -82,7 +82,6 @@ export async function POST(request: Request) {
   const rawName = formData.get('name')
 
   if (rawMode === 'manual') {
-    // Step 2: validate fields
     const parsed = manualSchema.safeParse({
       name: rawName,
       mode: rawMode,
@@ -95,7 +94,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Step 3: check file present
     const logoFile = formData.get('logo')
     if (!logoFile || !(logoFile instanceof File)) {
       return NextResponse.json(
@@ -104,7 +102,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Step 4: upload to Vercel Blob
     let logoUrl: string
     try {
       const blob = await put(`logos/${Date.now()}-${logoFile.name}`, logoFile, { access: 'public' })
@@ -113,30 +110,38 @@ export async function POST(request: Request) {
       return errMsg('blob-upload-logo', e)
     }
 
-    // Step 5: insert office
-    let office: typeof offices.$inferSelect
+    let client: typeof clients.$inferSelect
     try {
-      ;[office] = await db.insert(offices).values({ name: parsed.data.name }).returning()
+      ;[client] = await db.insert(clients).values({ name: parsed.data.name }).returning()
     } catch (e) {
-      return errMsg('db-insert-office', e)
+      return errMsg('db-insert-client', e)
     }
 
-    // Step 6: insert brand kit
     let brandKit: typeof brandKits.$inferSelect
     try {
       ;[brandKit] = await db
         .insert(brandKits)
-        .values({ officeId: office.id, mode: 'manual', primaryColor: parsed.data.primary_color, logoUrl })
+        .values({ clientId: client.id, mode: 'manual', primaryColor: parsed.data.primary_color, logoUrl })
         .returning()
     } catch (e) {
       return errMsg('db-insert-brandkit', e)
     }
 
-    return NextResponse.json({ office, brandKit }, { status: 201 })
+    // Create blank draft
+    try {
+      await db.insert(newsletterDrafts).values({
+        clientId: client.id,
+        slug: `client-${client.id}`,
+        rawContent: '',
+      })
+    } catch (e) {
+      return errMsg('db-insert-draft', e)
+    }
+
+    return NextResponse.json({ client, brandKit }, { status: 201 })
   }
 
   if (rawMode === 'uploaded') {
-    // Step 2: validate fields
     const parsed = uploadedSchema.safeParse({ name: rawName, mode: rawMode })
     if (!parsed.success) {
       return NextResponse.json(
@@ -145,7 +150,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Step 3: check file present
     const pdfFile = formData.get('guidelines_pdf')
     if (!pdfFile || !(pdfFile instanceof File)) {
       return NextResponse.json(
@@ -154,7 +158,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Step 4: upload to Vercel Blob
     let guidelinesPdfUrl: string
     try {
       const blob = await put(`guidelines/${Date.now()}-${pdfFile.name}`, pdfFile, { access: 'public' })
@@ -163,26 +166,35 @@ export async function POST(request: Request) {
       return errMsg('blob-upload-pdf', e)
     }
 
-    // Step 5: insert office
-    let office: typeof offices.$inferSelect
+    let client: typeof clients.$inferSelect
     try {
-      ;[office] = await db.insert(offices).values({ name: parsed.data.name }).returning()
+      ;[client] = await db.insert(clients).values({ name: parsed.data.name }).returning()
     } catch (e) {
-      return errMsg('db-insert-office', e)
+      return errMsg('db-insert-client', e)
     }
 
-    // Step 6: insert brand kit
     let brandKit: typeof brandKits.$inferSelect
     try {
       ;[brandKit] = await db
         .insert(brandKits)
-        .values({ officeId: office.id, mode: 'uploaded', guidelinesPdfUrl })
+        .values({ clientId: client.id, mode: 'uploaded', guidelinesPdfUrl })
         .returning()
     } catch (e) {
       return errMsg('db-insert-brandkit', e)
     }
 
-    return NextResponse.json({ office, brandKit }, { status: 201 })
+    // Create blank draft
+    try {
+      await db.insert(newsletterDrafts).values({
+        clientId: client.id,
+        slug: `client-${client.id}`,
+        rawContent: '',
+      })
+    } catch (e) {
+      return errMsg('db-insert-draft', e)
+    }
+
+    return NextResponse.json({ client, brandKit }, { status: 201 })
   }
 
   return NextResponse.json({ error: 'mode must be "manual" or "uploaded"' }, { status: 400 })

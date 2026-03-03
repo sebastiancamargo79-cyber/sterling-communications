@@ -1,0 +1,141 @@
+.main {
+  min-height: 100vh;
+  padding: 48px 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.heading {
+  font-size: 2rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.btnNew {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btnNew:hover {
+  background: var(--primaryHover);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.cardWrap {
+  position: relative;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--borderLight);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 100px;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(184, 150, 90, 0.15);
+}
+
+.colorSwatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--borderLight);
+}
+
+.clientName {
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+}
+
+.clientMeta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.btnRemove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--borderLight);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.btnRemove:hover {
+  color: #dc2626;
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--muted);
+}
+
+.btnNewLg {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 28px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.btnNewLg:hover {
+  background: var(--primaryHover);
+}

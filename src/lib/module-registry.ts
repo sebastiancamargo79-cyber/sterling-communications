@@ -182,3 +182,32 @@ export const AVAILABLE_MODULES = MODULE_REGISTRY.map((m) => m.name)
 export function getModuleDef(name: string): ModuleDef | undefined {
   return MODULE_REGISTRY.find((m) => m.name === name)
 }
+
+export async function getAllModuleDefs(): Promise<ModuleDef[]> {
+  try {
+    const { db } = await import('@/db')
+    const { moduleDefinitions } = await import('@/db/schema')
+    const { asc } = await import('drizzle-orm')
+
+    const rows = await db
+      .select()
+      .from(moduleDefinitions)
+      .orderBy(asc(moduleDefinitions.sortOrder), asc(moduleDefinitions.name))
+
+    if (rows.length === 0) return MODULE_REGISTRY
+
+    const customMods: ModuleDef[] = rows
+      .filter((r) => !r.isSystem)
+      .map((r) => ({
+        name: r.name,
+        label: r.label,
+        storageKey: r.storageKey,
+        fields: r.fields as FieldDef[],
+        aiPromptTemplate: r.aiPrompt,
+      }))
+
+    return [...MODULE_REGISTRY, ...customMods]
+  } catch {
+    return MODULE_REGISTRY
+  }
+}

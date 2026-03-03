@@ -25,7 +25,7 @@ function mapModulesToSchema(modules: Record<string, unknown>): Record<string, un
   return result
 }
 
-export async function parseNewsletter(content?: string): Promise<Newsletter> {
+export async function parseNewsletter(content?: string, clientId?: string): Promise<Newsletter> {
   if (content) {
     const modules = parseModuleBlocks(content)
     const mapped = mapModulesToSchema(modules)
@@ -37,16 +37,33 @@ export async function parseNewsletter(content?: string): Promise<Newsletter> {
     const { db } = await import('@/db')
     const { newsletterDrafts } = await import('@/db/schema')
     const { eq } = await import('drizzle-orm')
-    const rows = await db
-      .select()
-      .from(newsletterDrafts)
-      .where(eq(newsletterDrafts.slug, 'default'))
-      .limit(1)
 
-    if (rows.length > 0) {
-      const modules = parseModuleBlocks(rows[0].rawContent)
-      const mapped = mapModulesToSchema(modules)
-      return NewsletterSchema.parse(mapped)
+    if (clientId) {
+      // Client-specific draft
+      const rows = await db
+        .select()
+        .from(newsletterDrafts)
+        .where(eq(newsletterDrafts.clientId, clientId))
+        .limit(1)
+
+      if (rows.length > 0) {
+        const modules = parseModuleBlocks(rows[0].rawContent)
+        const mapped = mapModulesToSchema(modules)
+        return NewsletterSchema.parse(mapped)
+      }
+    } else {
+      // Legacy default draft
+      const rows = await db
+        .select()
+        .from(newsletterDrafts)
+        .where(eq(newsletterDrafts.slug, 'default'))
+        .limit(1)
+
+      if (rows.length > 0) {
+        const modules = parseModuleBlocks(rows[0].rawContent)
+        const mapped = mapModulesToSchema(modules)
+        return NewsletterSchema.parse(mapped)
+      }
     }
   } catch {
     // DB not available in this context — fall through to filesystem

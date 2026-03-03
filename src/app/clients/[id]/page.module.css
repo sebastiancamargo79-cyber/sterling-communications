@@ -1,0 +1,214 @@
+.main {
+  min-height: 100vh;
+  padding: 48px 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.breadcrumbLink {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.breadcrumbLink:hover {
+  color: var(--text);
+}
+
+.breadcrumbSep {
+  color: var(--borderLight);
+}
+
+.heading {
+  font-size: 2.25rem;
+  color: var(--text);
+  margin-bottom: 40px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--borderLight);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-heading);
+  border-bottom: 1px solid var(--borderLight);
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}
+
+.cardMeta {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--primaryHover);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--borderLight);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.btnSecondary:hover {
+  border-color: var(--border);
+  background: rgba(184, 150, 90, 0.06);
+}
+
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btnOutline:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btnOutline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnCancel {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btnCancel:hover {
+  color: var(--text);
+}
+
+.editionForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.editionInput {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  min-width: 200px;
+}
+
+.editionInput:focus {
+  border-color: var(--primary);
+}
+
+.savedBadge {
+  font-size: 0.85rem;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.swatchRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--borderLight);
+  flex-shrink: 0;
+}
+
+.swatchHex {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.pdfLink {
+  font-size: 0.875rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.pdfLink:hover {
+  text-decoration: underline;
+}
