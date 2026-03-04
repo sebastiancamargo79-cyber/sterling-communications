@@ -1,6 +1,7 @@
 import { ZodError } from 'zod'
-import { parseNewsletter } from '@/lib/newsletter-parser'
+import { parseNewsletter, NoDraftError } from '@/lib/newsletter-parser'
 import { PrintButton } from '@/components/newsletter/PrintButton'
+import { DownloadPdfButton } from '@/components/newsletter/DownloadPdfButton'
 import Page1Cover from '@/components/newsletter/Page1Cover'
 import Page2DirectorUpdate from '@/components/newsletter/Page2DirectorUpdate'
 import Page3Diary from '@/components/newsletter/Page3Diary'
@@ -23,6 +24,24 @@ export default async function ClientNewsletterPreview({
   try {
     data = await parseNewsletter(undefined, id)
   } catch (err) {
+    if (err instanceof NoDraftError) {
+      return (
+        <div className={styles.wrapper}>
+          <div className={styles.printBar}>
+            <a href={`/clients/${id}`} className={styles.backLink}>&larr; Back to Client</a>
+          </div>
+          <div className={styles.errorBox}>
+            <h1>No Newsletter Draft Yet</h1>
+            <p>No newsletter draft has been saved for this client.</p>
+            <p>
+              <a href={`/clients/${id}/newsletter/editor`} style={{ color: '#10263B', fontWeight: 600 }}>
+                Go to the editor to create one &rarr;
+              </a>
+            </p>
+          </div>
+        </div>
+      )
+    }
     if (err instanceof ZodError) {
       return (
         <div className={styles.wrapper}>
@@ -52,6 +71,7 @@ export default async function ClientNewsletterPreview({
         <span className={styles.printBarTitle}>
           {data.meta.office_name} — {data.meta.month} Newsletter
         </span>
+        <DownloadPdfButton clientId={id} />
         <PrintButton />
       </div>
       <div className={styles.pages}>

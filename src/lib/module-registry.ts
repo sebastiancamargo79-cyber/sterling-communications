@@ -179,6 +179,80 @@ Include 3–6 staff work anniversaries.`,
 
 export const AVAILABLE_MODULES = MODULE_REGISTRY.map((m) => m.name)
 
+/**
+ * Generate a module-block template pre-populated with the client's name.
+ */
+export function generateTemplate(clientName: string): string {
+  const now = new Date()
+  const month = now.toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+
+  return `:::module:Meta
+month: "${month}"
+office_name: "${clientName}"
+phone: ""
+website: ""
+email: ""
+:::
+
+:::module:Cover
+hero_image_url: ""
+teasers:
+  - "Welcome to ${clientName}"
+:::
+
+:::module:DirectorUpdate
+body_md: |
+  Welcome to the ${month} newsletter for ${clientName}.
+pull_quote: ""
+signature_name: ""
+signature_title: ""
+:::
+
+:::module:Events
+- type: event
+  title: ""
+  date: ""
+  time: ""
+  location: ""
+  description: ""
+:::
+
+:::module:ClientStory
+headline: ""
+image_url: ""
+body_md: ""
+:::
+
+:::module:StaffSpotlight
+image_url: ""
+name: ""
+role: ""
+years: 0
+quote: ""
+bio_md: ""
+:::
+
+:::module:Tips
+image_url: ""
+bullets:
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+:::
+
+:::module:Community
+recruitment_cta_md: ""
+awards_md: ""
+anniversaries:
+  - name: ""
+    years: 0
+    note: ""
+:::
+`
+}
+
 export function getModuleDef(name: string): ModuleDef | undefined {
   return MODULE_REGISTRY.find((m) => m.name === name)
 }

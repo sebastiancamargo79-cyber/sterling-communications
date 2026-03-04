@@ -10,6 +10,7 @@ interface Edition {
   title: string
   createdAt: Date
   rawContent: string
+  accessCode: string | null
 }
 
 interface Props {
@@ -72,6 +73,16 @@ export default function EditionsClient({ clientId, clientName, editions }: Props
                     {new Date(edition.createdAt).toLocaleString()}
                   </span>
                 </div>
+                {edition.accessCode && (
+                  <div className={styles.deliveryInfo}>
+                    <span className={styles.deliveryLabel}>Share:</span>
+                    <code className={styles.deliveryLink}>
+                      /delivery/{edition.id}
+                    </code>
+                    <span className={styles.deliveryLabel}>Code:</span>
+                    <code className={styles.deliveryCode}>{edition.accessCode}</code>
+                  </div>
+                )}
                 <div className={styles.rowActions}>
                   {restoreConfirm === edition.id ? (
                     <span className={styles.restoredMsg}>Draft restored ✓</span>

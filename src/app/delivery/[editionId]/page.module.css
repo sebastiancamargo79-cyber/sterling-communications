@@ -1,0 +1,131 @@
+.wrapper {
+  min-height: 100vh;
+  background: #f5f3ef;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Login / code entry */
+.loginBox {
+  background: #fff;
+  border: 1px solid #e8e0d4;
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  margin-top: 15vh;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.loginTitle {
+  font-size: 1.5rem;
+  color: #10263B;
+  margin: 0 0 0.5rem;
+}
+
+.loginDesc {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.codeInput {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e8e0d4;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 0.15em;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #10263B;
+  transition: border-color 0.15s;
+}
+
+.codeInput:focus {
+  outline: none;
+  border-color: #B8965A;
+  box-shadow: 0 0 0 3px rgba(184, 150, 90, 0.15);
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.btnSubmit {
+  padding: 0.75rem 1.5rem;
+  background: #10263B;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSubmit:hover:not(:disabled) {
+  background: #1a3a52;
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Edition view */
+.header {
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+  max-width: 900px;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #10263B;
+  margin: 0 0 0.25rem;
+}
+
+.date {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 900px;
+  width: 90%;
+  margin-bottom: 3rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.rawFallback {
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 900px;
+  width: 90%;
+  margin-bottom: 3rem;
+}
+
+.rawContent {
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}

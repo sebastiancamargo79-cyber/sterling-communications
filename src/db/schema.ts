@@ -29,6 +29,8 @@ export const newsletterEditions = pgTable('newsletter_editions', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   rawContent: text('raw_content').notNull(),
+  accessCode: text('access_code').unique(),
+  htmlSnapshot: text('html_snapshot'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

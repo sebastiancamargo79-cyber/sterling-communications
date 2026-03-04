@@ -3,6 +3,19 @@
   padding: 48px 0;
 }
 
+.back {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+  margin-bottom: 12px;
+  transition: color 0.15s;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
 .header {
   display: flex;
   align-items: flex-start;

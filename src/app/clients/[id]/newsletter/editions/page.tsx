@@ -31,6 +31,7 @@ export default async function EditionsPage({
         title: e.title,
         createdAt: e.createdAt,
         rawContent: e.rawContent,
+        accessCode: e.accessCode ?? null,
       }))}
     />
   )

@@ -4,6 +4,13 @@ import { join } from 'path'
 import { NewsletterSchema, type Newsletter } from './newsletter-schema'
 import { parseModuleBlocks } from './module-parser'
 
+export class NoDraftError extends Error {
+  constructor(clientId: string) {
+    super(`No newsletter draft found for client ${clientId}`)
+    this.name = 'NoDraftError'
+  }
+}
+
 // Module name → schema key mapping
 const MODULE_KEY_MAP: Record<string, string> = {
   meta: 'meta',
@@ -51,6 +58,9 @@ export async function parseNewsletter(content?: string, clientId?: string): Prom
         const mapped = mapModulesToSchema(modules)
         return NewsletterSchema.parse(mapped)
       }
+
+      // No draft for this client — don't fall through to filesystem
+      throw new NoDraftError(clientId)
     } else {
       // Legacy default draft
       const rows = await db

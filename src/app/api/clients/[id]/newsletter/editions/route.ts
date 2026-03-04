@@ -1,9 +1,14 @@
 export const dynamic = 'force-dynamic'
 
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { eq, desc } from 'drizzle-orm'
 import { db } from '@/db'
 import { newsletterEditions, newsletterDrafts } from '@/db/schema'
+
+function generateAccessCode(): string {
+  return crypto.randomBytes(4).toString('hex') // 8-char hex code
+}
 
 export async function GET(
   _req: NextRequest,
@@ -25,7 +30,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { title } = await req.json() as { title: string }
+  const { title, htmlSnapshot } = await req.json() as { title: string; htmlSnapshot?: string }
 
   if (!title?.trim()) {
     return NextResponse.json({ error: 'title is required' }, { status: 400 })
@@ -42,9 +47,17 @@ export async function POST(
     return NextResponse.json({ error: 'No draft found for this client' }, { status: 404 })
   }
 
+  const accessCode = generateAccessCode()
+
   const [edition] = await db
     .insert(newsletterEditions)
-    .values({ clientId: id, title: title.trim(), rawContent: draft.rawContent })
+    .values({
+      clientId: id,
+      title: title.trim(),
+      rawContent: draft.rawContent,
+      accessCode,
+      htmlSnapshot: htmlSnapshot ?? null,
+    })
     .returning()
 
   return NextResponse.json({ edition }, { status: 201 })

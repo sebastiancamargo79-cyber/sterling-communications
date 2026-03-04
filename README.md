@@ -1,6 +1,6 @@
 # Sterling Communications
 
-Office and brand kit management platform for Home Instead franchise offices.
+Client and brand kit management platform with newsletter creation pipeline for Home Instead franchise offices.
 
 **Repo:** https://github.com/sebastiancamargo79-cyber/sterling-communications
 **Vercel:** https://vercel.com/swift-f7122582/sterling-communications
@@ -8,13 +8,32 @@ Office and brand kit management platform for Home Instead franchise offices.
 
 ## Tech Stack
 
-Next.js 15 · TypeScript · Drizzle ORM · Neon Postgres · Vercel Blob · Zod · OpenAI
+Next.js 15 · TypeScript · Drizzle ORM · Neon Postgres · Vercel Blob · Zod · OpenAI · Puppeteer
 
 ## Features
 
-- **Office & Brand Kit Management** — create and manage offices with manual or uploaded brand kits (logo, primary colour, guidelines PDF)
-- **Newsletter Editor** — per-module editing UI at `/newsletter/editor` with AI-assisted content generation (GPT-4o)
-- **Monthly Newsletter Preview** — print-first 6-page A4 newsletter renderer at `/newsletter/preview`; content stored in Neon Postgres, editable via the editor
+- **Client & Brand Kit Management** — create and manage clients with manual or uploaded brand kits (logo, primary colour, guidelines PDF)
+- **Newsletter Editor** — per-client, per-module editing UI with AI-assisted content generation (GPT-4o). New clients are seeded with a full module template pre-populated with their name.
+- **Monthly Newsletter Preview** — print-first 6-page A4 newsletter renderer with per-client content stored in Neon Postgres
+- **PDF Export** — server-side PDF generation via Puppeteer (headless Chrome), plus browser Print
+- **Edition History** — save named editions (snapshots) of newsletters, restore previous editions
+- **Client Delivery Portal** — password-protected public route (`/delivery/[editionId]`) for clients to view published editions via unique access codes
+- **Admin Centre** — manage custom newsletter module definitions at `/admin/modules`
+
+## Route Architecture
+
+```
+/                                        Home (2-card nav)
+/clients                                 Client list
+/clients/new                             Create client
+/clients/[id]                            Client workspace
+/clients/[id]/newsletter/editor          Newsletter editor
+/clients/[id]/newsletter/preview         Newsletter preview + PDF download
+/clients/[id]/newsletter/editions        Edition history
+/delivery/[editionId]                    Public delivery portal (access code)
+/admin                                   Admin landing
+/admin/modules                           Module management
+```
 
 ## Local Dev Setup
 
@@ -23,7 +42,6 @@ Next.js 15 · TypeScript · Drizzle ORM · Neon Postgres · Vercel Blob · Zod �
 3. Copy `.env.example` → `.env.local` and fill in values
 4. `npm run db:migrate` — applies migrations to Neon
 5. `npm run dev` — starts on http://localhost:3000
-6. `GET /api/newsletter/seed` — seed the DB with content from `src/content/newsletter.md` (first run only)
 
 ## Required Environment Variables
 
@@ -44,9 +62,13 @@ npm run db:migrate    # apply pending migrations to Neon
 
 The newsletter is a 6-page A4 print layout driven by module-based content stored in Neon Postgres.
 
+### Pipeline
+
+Client Structured Submission → AI Content Generation → Layout Component Rendering → PDF + HTML Output → Client Delivery Portal
+
 ### Module Format
 
-Content is stored as `:::module:` blocks (in the DB and in `src/content/newsletter.md`):
+Content is stored as `:::module:` blocks in the DB:
 
 ```
 :::module:DirectorUpdate
@@ -73,11 +95,18 @@ signature_title: "Managing Director"
 
 ### Editing Workflow
 
-1. Visit `/newsletter/editor`
+1. Visit `/clients/[id]/newsletter/editor`
 2. Edit module fields directly, or enter a brief and click **✨ Generate** to AI-generate the content
 3. Click **Save** — content is persisted to Neon Postgres
-4. Click **Preview →** to review the full print layout at `/newsletter/preview`
-5. Use **Print / Save as PDF** on the preview page to export
+4. Click **Preview →** to review the full print layout
+5. Use **Download PDF** for server-generated A4 PDF, or **Print / Save as PDF** for browser print
+
+### Client Delivery
+
+1. Save an edition from the editor (click **Save Edition**)
+2. Each edition gets a unique access code shown in the editions list
+3. Share the `/delivery/[editionId]` link + access code with the client
+4. Client enters the code to view the published edition
 
 Content is validated with Zod at render time — invalid fields show a clear error page instead of crashing.
 
@@ -91,11 +120,16 @@ Content is validated with Zod at render time — invalid fields show a clear err
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/offices` | List all offices with brand kits |
-| `POST` | `/api/offices` | Create office + brand kit (multipart/form-data) |
-| `GET` | `/api/newsletter` | Get current newsletter draft |
-| `PUT` | `/api/newsletter` | Save newsletter draft to DB |
+| `GET` | `/api/clients` | List all clients with brand kits |
+| `POST` | `/api/clients` | Create client + brand kit (multipart/form-data) |
+| `GET` | `/api/clients/[id]` | Get client workspace data |
+| `DELETE` | `/api/clients/[id]` | Delete client (cascade) |
+| `GET` | `/api/clients/[id]/newsletter` | Get client newsletter draft |
+| `PUT` | `/api/clients/[id]/newsletter` | Save client newsletter draft |
+| `GET` | `/api/clients/[id]/newsletter/editions` | List editions |
+| `POST` | `/api/clients/[id]/newsletter/editions` | Publish edition (generates access code) |
+| `GET` | `/api/clients/[id]/newsletter/pdf` | Generate PDF of newsletter |
+| `POST` | `/api/delivery/[editionId]` | Validate access code, return edition |
 | `POST` | `/api/newsletter/generate` | AI-generate content for a module (GPT-4o) |
-| `GET` | `/api/newsletter/seed` | Seed DB from `src/content/newsletter.md` (one-time) |
-| `GET` | `/api/openapi.json` | OpenAPI 3.1 specification |
-| `GET` | `/docs` | API documentation page |
+| `GET` | `/api/admin/modules` | List all module definitions |
+| `POST` | `/api/admin/modules` | Create custom module definition |
