@@ -4,9 +4,8 @@ import { getAllModuleDefs } from '@/lib/module-registry'
 
 export const dynamic = 'force-dynamic'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 export async function POST(req: NextRequest) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const { moduleName, brief, currentContent } = await req.json() as {
     moduleName: string
     brief: string
