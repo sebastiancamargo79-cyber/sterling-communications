@@ -1,6 +1,7 @@
 import matter from 'gray-matter'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { ZodError } from 'zod'
 import { NewsletterSchema, type Newsletter } from './newsletter-schema'
 import { parseModuleBlocks } from './module-parser'
 
@@ -75,8 +76,10 @@ export async function parseNewsletter(content?: string, clientId?: string): Prom
         return NewsletterSchema.parse(mapped)
       }
     }
-  } catch {
-    // DB not available in this context — fall through to filesystem
+  } catch (err) {
+    if (err instanceof NoDraftError) throw err   // surface "no draft" to caller
+    if (err instanceof ZodError) throw err       // surface validation errors to caller
+    // Only reach here for genuine DB-unavailable errors — fall through to filesystem
   }
 
   // Filesystem fallback (dev)
