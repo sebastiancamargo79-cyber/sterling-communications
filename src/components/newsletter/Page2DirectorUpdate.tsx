@@ -5,7 +5,7 @@ import sharedStyles from './shared.module.css'
 import styles from './Page2DirectorUpdate.module.css'
 
 interface Props {
-  data: Newsletter['director_update']
+  data: Exclude<Newsletter['director_update'], undefined>
   meta: Newsletter['meta']
 }
 

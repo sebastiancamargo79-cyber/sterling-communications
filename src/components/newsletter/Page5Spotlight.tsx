@@ -5,7 +5,7 @@ import sharedStyles from './shared.module.css'
 import styles from './Page5Spotlight.module.css'
 
 interface Props {
-  data: Newsletter['spotlight']
+  data: Exclude<Newsletter['spotlight'], undefined>
   meta: Newsletter['meta']
   employerName?: string
 }

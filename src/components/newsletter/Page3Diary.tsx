@@ -4,7 +4,7 @@ import sharedStyles from './shared.module.css'
 import styles from './Page3Diary.module.css'
 
 interface Props {
-  events: EventItem[]
+  events: Exclude<Newsletter['events'], undefined>
   meta: Newsletter['meta']
 }
 

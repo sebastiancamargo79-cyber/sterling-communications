@@ -4,7 +4,7 @@ import sharedStyles from './shared.module.css'
 import styles from './Page1Cover.module.css'
 
 interface Props {
-  data: Newsletter['cover']
+  data: Exclude<Newsletter['cover'], undefined>
   meta: Newsletter['meta']
   logoUrl?: string | null
 }

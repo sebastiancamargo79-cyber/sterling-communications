@@ -5,7 +5,7 @@ import sharedStyles from './shared.module.css'
 import styles from './Page4ClientStory.module.css'
 
 interface Props {
-  data: Newsletter['client_story']
+  data: Exclude<Newsletter['client_story'], undefined>
   meta: Newsletter['meta']
 }
 

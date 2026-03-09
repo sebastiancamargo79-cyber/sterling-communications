@@ -5,8 +5,8 @@ import sharedStyles from './shared.module.css'
 import styles from './Page6Tips.module.css'
 
 interface Props {
-  tips: Newsletter['tips']
-  community: Newsletter['community']
+  tips: Exclude<Newsletter['tips'], undefined> | null
+  community: Exclude<Newsletter['community'], undefined> | null
   meta: Newsletter['meta']
 }
 
