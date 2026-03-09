@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import type { typeof brandKits } from '@/db/schema'
+import { brandKits } from '@/db/schema'
 
 type BrandKit = typeof brandKits.$inferSelect | null
 

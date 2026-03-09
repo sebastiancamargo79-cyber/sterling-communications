@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { typeof newsletterEditions } from '@/db/schema'
+import { newsletterEditions } from '@/db/schema'
 import styles from './page.module.css'
 
 type Edition = typeof newsletterEditions.$inferSelect
