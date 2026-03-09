@@ -271,8 +271,8 @@ export async function getAllModuleDefs(): Promise<ModuleDef[]> {
     if (rows.length === 0) return MODULE_REGISTRY
 
     const customMods: ModuleDef[] = rows
-      .filter((r) => !r.isSystem)
-      .map((r) => ({
+      .filter((r: typeof rows[number]) => !r.isSystem)
+      .map((r: typeof rows[number]) => ({
         name: r.name,
         label: r.label,
         storageKey: r.storageKey,

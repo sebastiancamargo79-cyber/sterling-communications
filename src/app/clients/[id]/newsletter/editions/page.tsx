@@ -26,7 +26,7 @@ export default async function EditionsPage({
     <EditionsClient
       clientId={id}
       clientName={client.name}
-      editions={editions.map((e) => ({
+      editions={editions.map((e: typeof editions[number]) => ({
         id: e.id,
         title: e.title,
         createdAt: e.createdAt,
