@@ -2,7 +2,7 @@
   font-size: 22pt;
   font-weight: 700;
   font-family: var(--font-heading), Georgia, serif;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   margin: 0 0 2mm;
   line-height: 1.2;
 }

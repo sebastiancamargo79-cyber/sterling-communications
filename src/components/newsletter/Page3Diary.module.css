@@ -2,7 +2,7 @@
   font-size: 18pt;
   font-weight: 700;
   font-family: var(--font-heading), Georgia, serif;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   margin: 0 0 2mm;
 }
 
@@ -15,8 +15,8 @@
 }
 
 .card {
-  background: var(--hi-grey);
-  border-left: 3px solid var(--hi-green);
+  background: var(--brand-bg);
+  border-left: 3px solid var(--brand-primary);
   padding: 3mm;
   border-radius: 2px;
   overflow: hidden;
@@ -43,7 +43,7 @@
   font-size: 10pt;
   font-weight: 700;
   font-family: var(--font-heading), Georgia, serif;
-  color: var(--hi-green2);
+  color: var(--brand-secondary);
   margin: 0 0 1mm;
 }
 

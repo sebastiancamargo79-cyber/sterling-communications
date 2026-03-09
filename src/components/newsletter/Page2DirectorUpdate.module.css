@@ -2,7 +2,7 @@
   font-size: 18pt;
   font-weight: 700;
   font-family: var(--font-heading), Georgia, serif;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   margin: 0 0 2mm;
 }
 
@@ -27,7 +27,7 @@
   font-style: italic;
   font-size: 12pt;
   text-align: center;
-  color: var(--hi-green2);
+  color: var(--brand-secondary);
   margin: 3mm 10mm;
   padding: 0;
   border: none;

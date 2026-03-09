@@ -341,3 +341,43 @@
   color: var(--muted);
   padding: 0.25rem;
 }
+
+/* Badge styles */
+.badgeRequired {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badgeOptional {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  background: #e5e7eb;
+  color: #6b7280;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Card title row with badges */
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Top bar layout */
+.topBarCenter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

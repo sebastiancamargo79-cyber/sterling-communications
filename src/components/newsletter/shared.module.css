@@ -13,7 +13,7 @@
 
 .rule {
   border: none;
-  border-top: 2px solid var(--hi-green2);
+  border-top: 2px solid var(--brand-secondary);
   margin: 4mm 0;
 }
 

@@ -16,6 +16,7 @@ interface ModuleBlock {
 interface Props {
   initialContent: string
   clientId: string
+  editionId?: string
   moduleDefs: ModuleDef[]
 }
 
@@ -137,16 +138,24 @@ function ModuleCard({
 }) {
   const def = getModuleDef(block.name, moduleDefs)
   const [rawMode, setRawMode] = useState(false)
+  const isRequired = block.name === 'Meta'
+  const isOptional = !isRequired
 
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardTitle}>{def?.label ?? block.name}</span>
+        <div className={styles.cardTitleRow}>
+          <span className={styles.cardTitle}>{def?.label ?? block.name}</span>
+          {isRequired && <span className={styles.badgeRequired}>Required</span>}
+          {isOptional && <span className={styles.badgeOptional}>Optional</span>}
+        </div>
         <div className={styles.cardActions}>
           <button className={styles.btnSmall} onClick={() => setRawMode((v) => !v)}>
             {rawMode ? 'Fields' : 'YAML'}
           </button>
-          <button className={styles.btnDanger} onClick={onRemove}>✕</button>
+          {!isRequired && (
+            <button className={styles.btnDanger} onClick={onRemove}>✕</button>
+          )}
         </div>
       </div>
 
@@ -211,7 +220,7 @@ function ModuleCard({
   )
 }
 
-export default function EditorClient({ initialContent, clientId, moduleDefs }: Props) {
+export default function EditorClient({ initialContent, clientId, editionId, moduleDefs }: Props) {
   const [blocks, setBlocks] = useState<ModuleBlock[]>(() =>
     extractModuleBlocks(initialContent).map((b) => ({ ...b, brief: '', generating: false }))
   )
@@ -251,6 +260,7 @@ export default function EditorClient({ initialContent, clientId, moduleDefs }: P
             moduleName: block.name,
             brief: block.brief,
             currentContent: block.yaml.trim() || undefined,
+            clientId,
           }),
         })
         if (!res.ok) throw new Error('Generate request failed')
@@ -261,7 +271,7 @@ export default function EditorClient({ initialContent, clientId, moduleDefs }: P
         alert('Generation failed. Check your OPENAI_API_KEY.')
       }
     },
-    [blocks, updateBlock]
+    [blocks, updateBlock, clientId]
   )
 
   const handleSave = async () => {
@@ -269,7 +279,11 @@ export default function EditorClient({ initialContent, clientId, moduleDefs }: P
     setSaveStatus('idle')
     try {
       const rawContent = serializeModuleArray(blocks)
-      const res = await fetch(`/api/clients/${clientId}/newsletter`, {
+      const endpoint = editionId
+        ? `/api/clients/${clientId}/newsletter/editions/${editionId}`
+        : `/api/clients/${clientId}/newsletter`
+
+      const res = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawContent }),
@@ -317,45 +331,21 @@ export default function EditorClient({ initialContent, clientId, moduleDefs }: P
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <a href={`/clients/${clientId}`} className={styles.backLink}>← Client</a>
+        </div>
+        <div className={styles.topBarCenter}>
           <h1 className={styles.topBarTitle}>Newsletter Editor</h1>
         </div>
         <div className={styles.topBarActions}>
           {saveStatus === 'saved' && <span className={styles.savedMsg}>Saved ✓</span>}
           {saveStatus === 'error' && <span className={styles.errorMsg}>Save failed</span>}
-          {editionSaved && <span className={styles.savedMsg}>Edition saved ✓</span>}
-
-          {editionOpen ? (
-            <div className={styles.editionInline}>
-              <input
-                className={styles.editionInput}
-                type="text"
-                placeholder="Edition title, e.g. March 2026"
-                value={editionTitle}
-                onChange={(e) => setEditionTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdition()}
-                autoFocus
-              />
-              <button
-                className={styles.btnEdition}
-                onClick={handleSaveEdition}
-                disabled={!editionTitle.trim() || savingEdition}
-              >
-                {savingEdition ? 'Saving…' : 'Publish'}
-              </button>
-              <button className={styles.btnCancelSmall} onClick={() => setEditionOpen(false)}>
-                ✕
-              </button>
-            </div>
-          ) : (
-            <button className={styles.btnEditionToggle} onClick={() => setEditionOpen(true)}>
-              Save Edition
-            </button>
-          )}
 
           <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </button>
-          <Link href={`/clients/${clientId}/newsletter/preview`} className={styles.btnPreview}>
+          <Link
+            href={editionId ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}` : `/clients/${clientId}/newsletter/preview`}
+            className={styles.btnPreview}
+          >
             Preview →
           </Link>
         </div>

@@ -6,14 +6,19 @@ import styles from './Page1Cover.module.css'
 interface Props {
   data: Newsletter['cover']
   meta: Newsletter['meta']
+  logoUrl?: string | null
 }
 
-export default function Page1Cover({ data, meta }: Props) {
+export default function Page1Cover({ data, meta, logoUrl }: Props) {
   return (
     <article className={sharedStyles.page}>
       <header className={styles.header}>
         <div className={styles.logo}>
-          <span className={styles.logoText}>Home Instead</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={meta.office_name} className={styles.logoImg} />
+          ) : (
+            <span className={styles.logoText}>{meta.office_name}</span>
+          )}
         </div>
         <div className={styles.metaLine}>
           <span className={styles.month}>{meta.month}</span>

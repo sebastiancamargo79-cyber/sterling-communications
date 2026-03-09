@@ -212,3 +212,234 @@
 .pdfLink:hover {
   text-decoration: underline;
 }
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.btnNewEdition {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btnNewEdition:hover {
+  background: var(--primaryHover);
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  font-family: var(--font-heading);
+}
+
+.editionsSection {
+  margin-bottom: 3rem;
+  background: var(--card);
+  border: 1px solid var(--borderLight);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+.editionsList {
+  overflow-x: auto;
+}
+
+.editionsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.editionsTable thead {
+  border-bottom: 2px solid var(--borderLight);
+}
+
+.editionsTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.editionsTable td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--borderLight);
+  color: var(--text);
+}
+
+.thTitle {
+  width: 40%;
+}
+
+.thDate {
+  width: 20%;
+  text-align: center;
+}
+
+.thActions {
+  width: 20%;
+  text-align: center;
+}
+
+.editionRow:last-child td {
+  border-bottom: none;
+}
+
+.tdTitle {
+  font-weight: 500;
+}
+
+.tdDate {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tdActions {
+  text-align: center;
+}
+
+.btnAction {
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0.25rem;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.btnAction:hover {
+  border-color: var(--border);
+  background: rgba(16, 38, 59, 0.05);
+}
+
+.btnDanger {
+  color: #d32f2f;
+  border-color: #ffebee;
+}
+
+.btnDanger:hover {
+  background: rgba(211, 47, 47, 0.05);
+  border-color: #d32f2f;
+}
+
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+.emptyState a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.emptyState a:hover {
+  text-decoration: underline;
+}
+
+.brandKitSection {
+  background: var(--card);
+  border: 1px solid var(--borderLight);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+.brandKitCard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.brandKitColors {
+  display: flex;
+  gap: 2rem;
+}
+
+.brandKitColors > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.brandLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.colorSwatch {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  border: 1px solid var(--borderLight);
+}
+
+.colorValue {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.brandKitLogo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.logoThumbnail {
+  max-width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+}
+
+.btnBrandKit {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: fit-content;
+}
+
+.btnBrandKit:hover {
+  background: var(--primaryHover);
+}

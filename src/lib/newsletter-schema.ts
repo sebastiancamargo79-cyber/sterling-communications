@@ -71,13 +71,13 @@ const CommunitySchema = z.object({
 
 export const NewsletterSchema = z.object({
   meta: MetaSchema,
-  cover: CoverSchema,
-  director_update: DirectorUpdateSchema,
-  events: z.array(EventUnion).max(6),
-  client_story: ClientStorySchema,
-  spotlight: SpotlightSchema,
-  tips: TipsSchema,
-  community: CommunitySchema,
+  cover: CoverSchema.optional(),
+  director_update: DirectorUpdateSchema.optional(),
+  events: z.array(EventUnion).max(6).optional(),
+  client_story: ClientStorySchema.optional(),
+  spotlight: SpotlightSchema.optional(),
+  tips: TipsSchema.optional(),
+  community: CommunitySchema.optional(),
 })
 
 export type Newsletter = z.infer<typeof NewsletterSchema>

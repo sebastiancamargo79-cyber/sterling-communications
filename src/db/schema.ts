@@ -11,14 +11,17 @@ export const brandKits = pgTable('brand_kits', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   mode: text('mode').notNull(),
   primaryColor: text('primary_color'),
+  secondaryColor: text('secondary_color'),
   logoUrl: text('logo_url'),
   guidelinesPdfUrl: text('guidelines_pdf_url'),
+  fontHeadingUrl: text('font_heading_url'),
+  fontBodyUrl: text('font_body_url'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
 
 export const newsletterDrafts = pgTable('newsletter_drafts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }),
+  clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }).unique(),
   slug: text('slug').notNull().unique(),
   rawContent: text('raw_content').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -32,6 +35,7 @@ export const newsletterEditions = pgTable('newsletter_editions', {
   accessCode: text('access_code').unique(),
   htmlSnapshot: text('html_snapshot'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }),
 })
 
 export const moduleDefinitions = pgTable('module_definitions', {

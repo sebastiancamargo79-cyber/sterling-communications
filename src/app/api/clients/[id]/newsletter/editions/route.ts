@@ -30,33 +30,31 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { title, htmlSnapshot } = await req.json() as { title: string; htmlSnapshot?: string }
+  const { title, rawContent, htmlSnapshot } = await req.json() as { title?: string; rawContent?: string; htmlSnapshot?: string }
 
-  if (!title?.trim()) {
-    return NextResponse.json({ error: 'title is required' }, { status: 400 })
-  }
-
-  // Get current draft content
-  const [draft] = await db
-    .select()
-    .from(newsletterDrafts)
-    .where(eq(newsletterDrafts.clientId, id))
-    .limit(1)
-
-  if (!draft) {
-    return NextResponse.json({ error: 'No draft found for this client' }, { status: 404 })
-  }
-
+  // If no title provided, generate blank edition
   const accessCode = generateAccessCode()
+
+  // Use provided rawContent or get from draft, or use empty string
+  let content = rawContent
+  if (!content) {
+    const [draft] = await db
+      .select()
+      .from(newsletterDrafts)
+      .where(eq(newsletterDrafts.clientId, id))
+      .limit(1)
+    content = draft?.rawContent ?? ''
+  }
 
   const [edition] = await db
     .insert(newsletterEditions)
     .values({
       clientId: id,
-      title: title.trim(),
-      rawContent: draft.rawContent,
+      title: title?.trim() ?? 'Untitled Edition',
+      rawContent: content,
       accessCode,
       htmlSnapshot: htmlSnapshot ?? null,
+      updatedAt: new Date(),
     })
     .returning()
 

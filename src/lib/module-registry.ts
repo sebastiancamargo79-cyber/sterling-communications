@@ -27,10 +27,10 @@ export const MODULE_REGISTRY: ModuleDef[] = [
       { key: 'website', label: 'Website', type: 'text' },
       { key: 'email', label: 'Email', type: 'text' },
     ],
-    aiPromptTemplate: `Generate the metadata section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Generate the metadata section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 month: "Month Year"
-office_name: "Home Instead [City]"
+office_name: "[Office Name]"
 phone: "phone number"
 website: "website url"
 email: "email address"`,
@@ -43,7 +43,7 @@ email: "email address"`,
       { key: 'hero_image_url', label: 'Hero Image URL', type: 'url' },
       { key: 'teasers', label: 'Teasers (3–5 lines)', type: 'array' },
     ],
-    aiPromptTemplate: `Generate the cover section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Generate the cover section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 hero_image_url: "https://picsum.photos/seed/homecare/800/533"
 teasers:
@@ -64,7 +64,7 @@ Include 3 to 5 teasers that preview newsletter content. Each max 40 characters.`
       { key: 'signature_name', label: 'Signature Name', type: 'text' },
       { key: 'signature_title', label: 'Signature Title', type: 'text' },
     ],
-    aiPromptTemplate: `Write the Director's Update section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Write the Director's Update section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 body_md: |
   [3-4 paragraphs of warm, professional letter from the managing director. Use markdown.]
@@ -79,7 +79,7 @@ signature_title: "[Director's title]"`,
     fields: [
       { key: 'events', label: 'Events (YAML list)', type: 'events' },
     ],
-    aiPromptTemplate: `Generate the events diary section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Generate the events diary section for a home care franchise newsletter.
 Output only valid YAML — a list of 3–5 items, each either an event or photo type:
 
 Event format:
@@ -106,7 +106,7 @@ Mix event and photo items.`,
       { key: 'image_url', label: 'Image URL', type: 'url' },
       { key: 'body_md', label: 'Story (Markdown)', type: 'textarea' },
     ],
-    aiPromptTemplate: `Write the Client Story section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Write the Client Story section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 headline: "[Compelling headline, e.g. 'A Life Well Lived: [Name]'s Story']"
 image_url: "https://picsum.photos/seed/[name]/800/450"
@@ -125,7 +125,7 @@ body_md: |
       { key: 'quote', label: 'Quote (max 120 chars)', type: 'text' },
       { key: 'bio_md', label: 'Bio (Markdown)', type: 'textarea' },
     ],
-    aiPromptTemplate: `Write the Staff Spotlight section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Write the Staff Spotlight section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 image_url: "https://picsum.photos/seed/[name]/400/400"
 name: "[Full name]"
@@ -143,7 +143,7 @@ bio_md: |
       { key: 'image_url', label: 'Image URL', type: 'url' },
       { key: 'bullets', label: 'Tips (exactly 5)', type: 'array' },
     ],
-    aiPromptTemplate: `Write the Wellbeing Tips section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Write the Wellbeing Tips section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 image_url: "https://picsum.photos/seed/[season]/400/400"
 bullets:
@@ -163,10 +163,10 @@ Provide exactly 5 practical wellbeing tips relevant to elderly care.`,
       { key: 'awards_md', label: 'Awards (Markdown)', type: 'textarea' },
       { key: 'anniversaries', label: 'Anniversaries (YAML list)', type: 'array' },
     ],
-    aiPromptTemplate: `Write the Community section for a Home Instead franchise newsletter.
+    aiPromptTemplate: `Write the Community section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 recruitment_cta_md: |
-  [2-3 paragraphs recruiting Care Professionals. Use markdown with bold headings.]
+  [2-3 paragraphs recruiting care professionals. Use markdown with bold headings.]
 awards_md: |
   [1-2 paragraphs about any awards, achievements, or recognition. Use markdown.]
 anniversaries:

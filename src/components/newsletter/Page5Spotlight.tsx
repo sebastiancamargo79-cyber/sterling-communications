@@ -7,9 +7,10 @@ import styles from './Page5Spotlight.module.css'
 interface Props {
   data: Newsletter['spotlight']
   meta: Newsletter['meta']
+  employerName?: string
 }
 
-export default function Page5Spotlight({ data, meta }: Props) {
+export default function Page5Spotlight({ data, meta, employerName = 'Home Care' }: Props) {
   return (
     <article className={sharedStyles.page}>
       <h1 className={styles.heading}>Care Professional Spotlight</h1>
@@ -22,7 +23,7 @@ export default function Page5Spotlight({ data, meta }: Props) {
         <div className={styles.info}>
           <h2 className={styles.name}>{data.name}</h2>
           <p className={styles.roleLine}>
-            {data.role} &middot; {data.years} year{data.years !== 1 ? 's' : ''} with Home Instead
+            {data.role} &middot; {data.years} year{data.years !== 1 ? 's' : ''} with {employerName}
           </p>
           <blockquote className={styles.quote}>
             &ldquo;{data.quote}&rdquo;

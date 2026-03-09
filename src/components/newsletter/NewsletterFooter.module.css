@@ -8,16 +8,16 @@
   gap: 6px;
   font-size: 8pt;
   color: #555;
-  border-top: 1px solid var(--hi-green2);
+  border-top: 1px solid var(--brand-secondary);
   padding-top: 3mm;
 }
 
 .divider {
-  color: var(--hi-green2);
+  color: var(--brand-secondary);
 }
 
 .pageNum {
   margin-left: auto;
   font-weight: 600;
-  color: var(--hi-green);
+  color: var(--brand-primary);
 }

@@ -1,10 +1,10 @@
 import { db } from '@/db'
-import { clients, brandKits, newsletterDrafts, newsletterEditions } from '@/db/schema'
-import { eq, count } from 'drizzle-orm'
+import { clients, brandKits, newsletterEditions } from '@/db/schema'
+import { eq, desc } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Container from '@/components/Container'
-import WorkspaceSaveEdition from './WorkspaceSaveEdition'
+import EditionsClientComponent from './EditionsClient'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -21,19 +21,11 @@ export default async function ClientWorkspacePage({
 
   const [brandKit] = await db.select().from(brandKits).where(eq(brandKits.clientId, id)).limit(1)
 
-  const [draft] = await db
+  const editions = await db
     .select()
-    .from(newsletterDrafts)
-    .where(eq(newsletterDrafts.clientId, id))
-    .limit(1)
-
-  const [editionCount] = await db
-    .select({ count: count() })
     .from(newsletterEditions)
     .where(eq(newsletterEditions.clientId, id))
-
-  const draftUpdatedAt = draft?.updatedAt ?? null
-  const editions = editionCount?.count ?? 0
+    .orderBy(desc(newsletterEditions.createdAt))
 
   return (
     <main className={styles.main}>
@@ -44,70 +36,56 @@ export default async function ClientWorkspacePage({
           <span>{client.name}</span>
         </nav>
 
-        <h1 className={styles.heading}>{client.name}</h1>
+        <div className={styles.headerRow}>
+          <h1 className={styles.heading}>{client.name}</h1>
+          <Link href={`/clients/${id}/newsletter/editor`} className={styles.btnNewEdition}>
+            + New Edition
+          </Link>
+        </div>
 
-        <div className={styles.grid}>
-          {/* Newsletter card */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Newsletter</h2>
-            {draftUpdatedAt ? (
-              <p className={styles.cardMeta}>
-                Last saved: {new Date(draftUpdatedAt).toLocaleString()}
-              </p>
-            ) : (
-              <p className={styles.cardMeta}>No draft yet</p>
-            )}
-            <div className={styles.cardActions}>
-              <Link href={`/clients/${id}/newsletter/editor`} className={styles.btnPrimary}>
-                Edit Newsletter
-              </Link>
-              <Link href={`/clients/${id}/newsletter/preview`} className={styles.btnSecondary}>
-                Preview
-              </Link>
-              <WorkspaceSaveEdition clientId={id} hasDraft={!!draft} />
+        {/* Editions list */}
+        <div className={styles.editionsSection}>
+          <h2 className={styles.sectionTitle}>Editions</h2>
+          {editions.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No editions yet. <Link href={`/clients/${id}/newsletter/editor`}>Create your first edition →</Link></p>
             </div>
-          </div>
-
-          {/* Editions card */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Edition History</h2>
-            <p className={styles.cardMeta}>
-              {editions} saved edition{editions !== 1 ? 's' : ''}
-            </p>
-            <div className={styles.cardActions}>
-              <Link href={`/clients/${id}/newsletter/editions`} className={styles.btnSecondary}>
-                View Editions →
-              </Link>
-            </div>
-          </div>
-
-          {/* Brand kit card */}
-          {brandKit && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Brand Kit</h2>
-              {brandKit.mode === 'manual' && brandKit.primaryColor && (
-                <div className={styles.swatchRow}>
-                  <div
-                    className={styles.swatch}
-                    style={{ background: brandKit.primaryColor }}
-                  />
-                  <span className={styles.swatchHex}>{brandKit.primaryColor}</span>
-                </div>
-              )}
-              {brandKit.mode === 'uploaded' && brandKit.guidelinesPdfUrl && (
-                <a
-                  href={brandKit.guidelinesPdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.pdfLink}
-                >
-                  View Guidelines PDF ↗
-                </a>
-              )}
-              <p className={styles.cardMeta}>Mode: {brandKit.mode}</p>
-            </div>
+          ) : (
+            <EditionsClientComponent clientId={id} editions={editions} />
           )}
         </div>
+
+        {/* Brand kit card */}
+        {brandKit && (
+          <div className={styles.brandKitSection}>
+            <h2 className={styles.sectionTitle}>Brand Kit</h2>
+            <div className={styles.brandKitCard}>
+              <div className={styles.brandKitColors}>
+                <div>
+                  <label className={styles.brandLabel}>Primary</label>
+                  <div className={styles.colorSwatch} style={{ background: brandKit.primaryColor || '#006938' }} />
+                  <span className={styles.colorValue}>{brandKit.primaryColor || '#006938'}</span>
+                </div>
+                {brandKit.secondaryColor && (
+                  <div>
+                    <label className={styles.brandLabel}>Secondary</label>
+                    <div className={styles.colorSwatch} style={{ background: brandKit.secondaryColor }} />
+                    <span className={styles.colorValue}>{brandKit.secondaryColor}</span>
+                  </div>
+                )}
+              </div>
+              {brandKit.logoUrl && (
+                <div className={styles.brandKitLogo}>
+                  <label className={styles.brandLabel}>Logo</label>
+                  <img src={brandKit.logoUrl} alt="Logo" className={styles.logoThumbnail} />
+                </div>
+              )}
+              <Link href={`/clients/${id}/brand-kit`} className={styles.btnBrandKit}>
+                Edit Brand Kit →
+              </Link>
+            </div>
+          </div>
+        )}
       </Container>
     </main>
   )

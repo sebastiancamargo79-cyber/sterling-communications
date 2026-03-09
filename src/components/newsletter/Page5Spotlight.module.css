@@ -2,7 +2,7 @@
   font-size: 18pt;
   font-weight: 700;
   font-family: var(--font-heading), Georgia, serif;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   margin: 0 0 2mm;
 }
 
@@ -19,7 +19,7 @@
   height: 80mm;
   overflow: hidden;
   border-radius: 2px;
-  border: 2px solid var(--hi-green);
+  border: 2px solid var(--brand-primary);
 }
 
 .portrait {
@@ -44,7 +44,7 @@
 
 .roleLine {
   font-size: 9.5pt;
-  color: var(--hi-green2);
+  color: var(--brand-secondary);
   font-weight: 600;
   margin: 0 0 3mm;
   text-transform: uppercase;
@@ -55,8 +55,8 @@
   font-family: var(--font-heading), Georgia, serif;
   font-style: italic;
   font-size: 11pt;
-  color: var(--hi-green2);
-  border-left: 3px solid var(--hi-green);
+  color: var(--brand-secondary);
+  border-left: 3px solid var(--brand-primary);
   padding-left: 4mm;
   margin: 0 0 3mm;
   line-height: 1.5;

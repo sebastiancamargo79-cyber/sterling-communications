@@ -1,5 +1,8 @@
 import { ZodError } from 'zod'
 import { parseNewsletter, NoDraftError } from '@/lib/newsletter-parser'
+import { db } from '@/db'
+import { brandKits, clients, newsletterEditions } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 import { PrintButton } from '@/components/newsletter/PrintButton'
 import { DownloadPdfButton } from '@/components/newsletter/DownloadPdfButton'
 import Page1Cover from '@/components/newsletter/Page1Cover'
@@ -14,15 +17,36 @@ export const dynamic = 'force-dynamic'
 
 export default async function ClientNewsletterPreview({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ editionId?: string }>
 }) {
   const { id } = await params
+  const { editionId } = await searchParams
 
   let data
 
   try {
-    data = await parseNewsletter(undefined, id)
+    // If editionId is provided, fetch edition content; otherwise use draft
+    if (editionId) {
+      const edition = await db.query.newsletterEditions.findFirst({
+        where: eq(newsletterEditions.id, editionId),
+      })
+      if (!edition) {
+        return (
+          <div className={styles.wrapper}>
+            <div className={styles.errorBox}>
+              <h1>Edition Not Found</h1>
+              <p>The requested newsletter edition could not be found.</p>
+            </div>
+          </div>
+        )
+      }
+      data = await parseNewsletter(edition.rawContent)
+    } else {
+      data = await parseNewsletter(undefined, id)
+    }
   } catch (err) {
     if (err instanceof NoDraftError) {
       return (
@@ -64,8 +88,28 @@ export default async function ClientNewsletterPreview({
     throw err
   }
 
+  // Fetch brand kit and client for brand colors
+  const brandKit = await db.query.brandKits.findFirst({
+    where: eq(brandKits.clientId, id),
+  })
+
+  const client = await db.query.clients.findFirst({
+    where: eq(clients.id, id),
+  })
+
+  const brandColors = {
+    primary: brandKit?.primaryColor ?? '#006938',
+    secondary: brandKit?.secondaryColor ?? '#1a5c38',
+  }
+
+  // Inject CSS variables as inline styles
+  const styleVars = {
+    '--brand-primary': brandColors.primary,
+    '--brand-secondary': brandColors.secondary,
+  } as React.CSSProperties
+
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} style={styleVars}>
       <div className={styles.printBar}>
         <a href={`/clients/${id}`} className={styles.backLink}>← Back to Client</a>
         <span className={styles.printBarTitle}>
@@ -75,12 +119,12 @@ export default async function ClientNewsletterPreview({
         <PrintButton />
       </div>
       <div className={styles.pages}>
-        <Page1Cover data={data.cover} meta={data.meta} />
-        <Page2DirectorUpdate data={data.director_update} meta={data.meta} />
-        <Page3Diary events={data.events} meta={data.meta} />
-        <Page4ClientStory data={data.client_story} meta={data.meta} />
-        <Page5Spotlight data={data.spotlight} meta={data.meta} />
-        <Page6Tips tips={data.tips} community={data.community} meta={data.meta} />
+        {data.cover && <Page1Cover data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl ?? null} />}
+        {data.director_update && <Page2DirectorUpdate data={data.director_update} meta={data.meta} />}
+        {data.events && <Page3Diary events={data.events} meta={data.meta} />}
+        {data.client_story && <Page4ClientStory data={data.client_story} meta={data.meta} />}
+        {data.spotlight && <Page5Spotlight data={data.spotlight} meta={data.meta} employerName={client?.name ?? 'Home Care'} />}
+        {(data.tips || data.community) && <Page6Tips tips={data.tips ?? null} community={data.community ?? null} meta={data.meta} />}
       </div>
     </div>
   )

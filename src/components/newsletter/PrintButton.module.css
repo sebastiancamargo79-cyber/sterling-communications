@@ -1,5 +1,5 @@
 .btn {
-  background: var(--hi-green);
+  background: var(--brand-primary);
   color: #fff;
   border: none;
   padding: 10px 20px;
@@ -11,5 +11,5 @@
 }
 
 .btn:hover {
-  background: var(--hi-green2);
+  background: var(--brand-secondary);
 }

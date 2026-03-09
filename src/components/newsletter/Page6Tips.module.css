@@ -2,7 +2,7 @@
   font-size: 18pt;
   font-weight: 700;
   font-family: var(--font-heading), Georgia, serif;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   margin: 0 0 2mm;
 }
 
@@ -50,7 +50,7 @@
   content: '✓';
   position: absolute;
   left: 0;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   font-weight: 700;
 }
 
@@ -65,7 +65,7 @@
   font-size: 9pt;
   line-height: 1.6;
   color: var(--text);
-  background: var(--hi-grey);
+  background: var(--brand-bg);
   padding: 3mm;
   border-radius: 2px;
 }
@@ -75,17 +75,17 @@
 }
 
 .recruitment strong {
-  color: var(--hi-green);
+  color: var(--brand-primary);
 }
 
 .awards {
   font-size: 9pt;
   line-height: 1.6;
   color: var(--text);
-  background: var(--hi-grey);
+  background: var(--brand-bg);
   padding: 3mm;
   border-radius: 2px;
-  border-left: 3px solid var(--hi-green);
+  border-left: 3px solid var(--brand-primary);
 }
 
 .awards p {
@@ -93,7 +93,7 @@
 }
 
 .awards strong {
-  color: var(--hi-green2);
+  color: var(--brand-secondary);
 }
 
 .anniversaries {
@@ -103,7 +103,7 @@
 .anniversaryHeading {
   font-size: 10pt;
   font-weight: 700;
-  color: var(--hi-green);
+  color: var(--brand-primary);
   margin: 0 0 1.5mm;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -131,7 +131,7 @@
 
 .aYears {
   padding: 1mm 2mm;
-  color: var(--hi-green2);
+  color: var(--brand-secondary);
   font-weight: 700;
   width: 20%;
 }

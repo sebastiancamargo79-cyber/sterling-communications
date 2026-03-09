@@ -7,6 +7,11 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { clients, brandKits, newsletterDrafts } from '@/db/schema'
 
+function slugify(name: string, id: string): string {
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
+  return `${base}-${id.slice(0, 4)}`
+}
+
 export async function GET() {
   const rows = await db
     .select()
@@ -131,7 +136,7 @@ export async function POST(request: Request) {
     try {
       await db.insert(newsletterDrafts).values({
         clientId: client.id,
-        slug: `client-${client.id}`,
+        slug: slugify(parsed.data.name, client.id),
         rawContent: '',
       })
     } catch (e) {
@@ -187,7 +192,7 @@ export async function POST(request: Request) {
     try {
       await db.insert(newsletterDrafts).values({
         clientId: client.id,
-        slug: `client-${client.id}`,
+        slug: slugify(parsed.data.name, client.id),
         rawContent: '',
       })
     } catch (e) {
