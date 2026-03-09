@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       if (client) {
         brandContext = {
           officeName: client.name,
-          primaryColor: brandKit?.primaryColor,
+          primaryColor: brandKit?.primaryColor ?? undefined,
         }
       }
     } catch (e) {
