@@ -48,12 +48,12 @@ export default async function NewsletterPreview() {
         <PrintButton />
       </div>
       <div className={styles.pages}>
-        <Page1Cover data={data.cover} meta={data.meta} />
-        <Page2DirectorUpdate data={data.director_update} meta={data.meta} />
-        <Page3Diary events={data.events} meta={data.meta} />
-        <Page4ClientStory data={data.client_story} meta={data.meta} />
-        <Page5Spotlight data={data.spotlight} meta={data.meta} />
-        <Page6Tips tips={data.tips} community={data.community} meta={data.meta} />
+        {data.cover && <Page1Cover data={data.cover} meta={data.meta} />}
+        {data.director_update && <Page2DirectorUpdate data={data.director_update} meta={data.meta} />}
+        {data.events && <Page3Diary events={data.events} meta={data.meta} />}
+        {data.client_story && <Page4ClientStory data={data.client_story} meta={data.meta} />}
+        {data.spotlight && <Page5Spotlight data={data.spotlight} meta={data.meta} />}
+        {(data.tips || data.community) && <Page6Tips tips={data.tips} community={data.community} meta={data.meta} />}
       </div>
     </div>
   )
