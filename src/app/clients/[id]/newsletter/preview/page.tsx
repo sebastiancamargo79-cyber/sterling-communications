@@ -119,12 +119,12 @@ export default async function ClientNewsletterPreview({
         <PrintButton />
       </div>
       <div className={styles.pages}>
-        {data.cover && <Page1Cover data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl ?? null} />}
+        {data.cover && <Page1Cover data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl} />}
         {data.director_update && <Page2DirectorUpdate data={data.director_update} meta={data.meta} />}
         {data.events && <Page3Diary events={data.events} meta={data.meta} />}
         {data.client_story && <Page4ClientStory data={data.client_story} meta={data.meta} />}
         {data.spotlight && <Page5Spotlight data={data.spotlight} meta={data.meta} employerName={client?.name ?? 'Home Care'} />}
-        {(data.tips || data.community) && <Page6Tips tips={data.tips ?? null} community={data.community ?? null} meta={data.meta} />}
+        {(data.tips || data.community) && <Page6Tips tips={data.tips} community={data.community} meta={data.meta} />}
       </div>
     </div>
   )
