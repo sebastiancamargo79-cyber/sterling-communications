@@ -4,5 +4,7 @@ export default {
   schema: './src/db/schema.ts',
   out: './drizzle',
   dialect: 'postgresql',
-  dbCredentials: { connectionString: process.env.POSTGRES_URL! },
+  dbCredentials: {
+    url: process.env.POSTGRES_URL!,
+  },
 } satisfies Config
