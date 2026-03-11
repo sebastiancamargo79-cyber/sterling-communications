@@ -33,15 +33,18 @@ async function downloadPdf(url: string): Promise<Buffer> {
 }
 
 async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
-  // Dynamic import to avoid bundling issues
-  const pdfParse = (await import('pdf-parse')).default
-
   try {
+    // Dynamic import to avoid bundling issues
+    const pdfParse = await import('pdf-parse')
     const pdfData = await pdfParse(pdfBuffer)
 
     // Get text from first 3 pages max
     const pages = pdfData.pages.slice(0, 3)
-    const textChunks = pages.map((page: any) => page.text)
+    const textChunks = pages.map((page) => page.text).filter(Boolean)
+
+    if (textChunks.length === 0) {
+      throw new Error('No text extracted from PDF')
+    }
 
     return textChunks.join('\n\n')
   } catch (e) {
