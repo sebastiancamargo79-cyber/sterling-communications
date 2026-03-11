@@ -17,7 +17,6 @@
     "@neondatabase/serverless": "^0.10.1",
     "@sparticuz/chromium": "^143.0.4",
     "@vercel/blob": "^0.27.0",
-    "canvas": "^2.11.2",
     "drizzle-orm": "^0.38.3",
     "gray-matter": "^4.0.3",
     "next": "^15.1.0",

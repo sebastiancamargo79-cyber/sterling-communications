@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import OpenAI from 'openai'
 import * as pdfjsLib from 'pdfjs-dist'
-import { createCanvas } from 'canvas'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,26 +32,31 @@ async function downloadPdf(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer()
 }
 
-async function convertPdfPageToBase64(pdfBuffer: ArrayBuffer, pageNum: number): Promise<string> {
-  const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise
-
-  if (pageNum > pdf.numPages) {
-    throw new Error(`Page ${pageNum} does not exist (PDF has ${pdf.numPages} pages)`)
+async function extractPdfText(pdfBuffer: ArrayBuffer): Promise<string> {
+  let pdf
+  try {
+    pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise
+  } catch {
+    throw new Error('Failed to parse PDF document')
   }
 
-  const page = await pdf.getPage(pageNum)
-  const viewport = page.getViewport({ scale: 2 }) // 2x scale for better quality
+  const textChunks: string[] = []
+  const maxPages = Math.min(3, pdf.numPages)
 
-  const canvas = createCanvas(viewport.width, viewport.height)
-  const context = canvas.getContext('2d')
+  for (let i = 1; i <= maxPages; i++) {
+    try {
+      const page = await pdf.getPage(i)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items
+        .map((item: any) => (item.str ? item.str : ''))
+        .join(' ')
+      textChunks.push(pageText)
+    } catch (e) {
+      console.warn(`Failed to extract text from page ${i}:`, e)
+    }
+  }
 
-  await page.render({
-    canvasContext: context,
-    viewport,
-  }).promise
-
-  const buffer = canvas.toBuffer('image/png')
-  return buffer.toString('base64')
+  return textChunks.join('\n\n')
 }
 
 export async function POST(
@@ -74,44 +78,18 @@ export async function POST(
 
     const { pdfUrl } = parsed.data
 
-    // Download PDF
+    // Download and extract text from PDF
     const pdfBuffer = await downloadPdf(pdfUrl)
+    const pdfText = await extractPdfText(pdfBuffer)
 
-    // Convert first 3 pages to images
-    const imageBase64Array: string[] = []
-    const maxPages = 3
-    let pdf
-    try {
-      pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise
-    } catch {
+    if (!pdfText.trim()) {
       return NextResponse.json(
-        { error: 'Failed to parse PDF document' },
+        { error: 'Could not extract any text from PDF' },
         { status: 400 }
       )
     }
 
-    const pagesToProcess = Math.min(maxPages, pdf.numPages)
-    for (let i = 1; i <= pagesToProcess; i++) {
-      try {
-        const base64 = await convertPdfPageToBase64(pdfBuffer, i)
-        imageBase64Array.push(base64)
-      } catch (e) {
-        console.warn(`Failed to convert page ${i}:`, e)
-      }
-    }
-
-    if (imageBase64Array.length === 0) {
-      return NextResponse.json(
-        { error: 'Could not convert any PDF pages to images' },
-        { status: 400 }
-      )
-    }
-
-    // Build message content with images
-    const contentParts: Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string; detail: string } }> = [
-      {
-        type: 'text',
-        text: `You are a brand extraction assistant reading brand guideline pages. Analyze these images and extract brand design tokens.
+    const systemPrompt = `You are a brand extraction assistant analyzing brand guideline documents. Extract design tokens from the provided text.
 
 Return ONLY a valid JSON object with these exact keys (all values can be null if not found):
 {
@@ -141,20 +119,7 @@ Return ONLY a valid JSON object with these exact keys (all values can be null if
   }
 }
 
-IMPORTANT: Return ONLY valid JSON. No explanations, no markdown, no code blocks.`,
-      },
-    ]
-
-    // Add all images
-    imageBase64Array.forEach((base64) => {
-      contentParts.push({
-        type: 'image_url',
-        image_url: {
-          url: `data:image/png;base64,${base64}`,
-          detail: 'high',
-        },
-      })
-    })
+IMPORTANT: Return ONLY valid JSON. No explanations, markdown, or code blocks.`
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -163,8 +128,12 @@ IMPORTANT: Return ONLY valid JSON. No explanations, no markdown, no code blocks.
       max_tokens: 1024,
       messages: [
         {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
           role: 'user',
-          content: contentParts as Parameters<typeof openai.chat.completions.create>[0]['messages'][0]['content'],
+          content: `Extract brand design tokens from this guideline document:\n\n${pdfText}`,
         },
       ],
     })
