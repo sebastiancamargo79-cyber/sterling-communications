@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import OpenAI from 'openai'
-import * as pdfjsLib from 'pdfjs-dist'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,39 +23,30 @@ const responseSchema = z.object({
   confidence: z.record(z.number()),
 })
 
-async function downloadPdf(url: string): Promise<ArrayBuffer> {
+async function downloadPdf(url: string): Promise<Buffer> {
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Failed to download PDF: ${response.statusText}`)
   }
-  return response.arrayBuffer()
+  const arrayBuffer = await response.arrayBuffer()
+  return Buffer.from(arrayBuffer)
 }
 
-async function extractPdfText(pdfBuffer: ArrayBuffer): Promise<string> {
-  let pdf
+async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
+  // Dynamic import to avoid bundling issues
+  const pdfParse = (await import('pdf-parse')).default
+
   try {
-    pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise
-  } catch {
-    throw new Error('Failed to parse PDF document')
+    const pdfData = await pdfParse(pdfBuffer)
+
+    // Get text from first 3 pages max
+    const pages = pdfData.pages.slice(0, 3)
+    const textChunks = pages.map((page: any) => page.text)
+
+    return textChunks.join('\n\n')
+  } catch (e) {
+    throw new Error(`Failed to parse PDF: ${e instanceof Error ? e.message : String(e)}`)
   }
-
-  const textChunks: string[] = []
-  const maxPages = Math.min(3, pdf.numPages)
-
-  for (let i = 1; i <= maxPages; i++) {
-    try {
-      const page = await pdf.getPage(i)
-      const textContent = await page.getTextContent()
-      const pageText = textContent.items
-        .map((item: any) => (item.str ? item.str : ''))
-        .join(' ')
-      textChunks.push(pageText)
-    } catch (e) {
-      console.warn(`Failed to extract text from page ${i}:`, e)
-    }
-  }
-
-  return textChunks.join('\n\n')
 }
 
 export async function POST(
