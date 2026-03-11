@@ -11,12 +11,14 @@ export default function HomePage() {
           <p className={styles.subtitle}>Newsletter and client management platform.</p>
           <div className={styles.navGrid}>
             <Link href="/clients" className={styles.navCard}>
-              <span className={styles.navCardIcon}>👥</span>
               <span className={styles.navCardTitle}>Clients</span>
               <span className={styles.navCardDesc}>Manage clients, newsletters, and edition history</span>
             </Link>
+            <Link href="/brand-studio" className={styles.navCard}>
+              <span className={styles.navCardTitle}>Brand Studio</span>
+              <span className={styles.navCardDesc}>Design tokens, brand extraction, and AI design assistant</span>
+            </Link>
             <Link href="/admin" className={styles.navCard}>
-              <span className={styles.navCardIcon}>⚙️</span>
               <span className={styles.navCardTitle}>Admin</span>
               <span className={styles.navCardDesc}>Configure newsletter modules and system settings</span>
             </Link>

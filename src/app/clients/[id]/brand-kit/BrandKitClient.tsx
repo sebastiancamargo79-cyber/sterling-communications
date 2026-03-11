@@ -15,14 +15,22 @@ interface Props {
 export default function BrandKitClient({ clientId, clientName, brandKit }: Props) {
   const [primaryColor, setPrimaryColor] = useState(brandKit?.primaryColor || '#006938')
   const [secondaryColor, setSecondaryColor] = useState(brandKit?.secondaryColor || '#1a5c38')
+  const [bgColor, setBgColor] = useState(brandKit?.bgColor || '#f5f5f0')
+  const [accentColor, setAccentColor] = useState(brandKit?.accentColor || '#1a5c38')
   const [logoUrl, setLogoUrl] = useState(brandKit?.logoUrl || '')
   const [fontHeadingUrl, setFontHeadingUrl] = useState(brandKit?.fontHeadingUrl || '')
   const [fontBodyUrl, setFontBodyUrl] = useState(brandKit?.fontBodyUrl || '')
+  const [fontHeadingName, setFontHeadingName] = useState(brandKit?.fontHeadingName || '')
+  const [fontBodyName, setFontBodyName] = useState(brandKit?.fontBodyName || '')
 
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingFont, setUploadingFont] = useState<'heading' | 'body' | null>(null)
+
+  const [extracting, setExtracting] = useState(false)
+  const [extractedData, setExtractedData] = useState<any>(null)
+  const [pdfUrl, setPdfUrl] = useState(brandKit?.guidelinesPdfUrl || '')
 
   const logoInputRef = useRef<HTMLInputElement>(null)
   const fontHeadingInputRef = useRef<HTMLInputElement>(null)
@@ -38,6 +46,10 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
         body: JSON.stringify({
           primaryColor,
           secondaryColor,
+          bgColor,
+          accentColor,
+          fontHeadingName,
+          fontBodyName,
         }),
       })
       if (!res.ok) throw new Error('Save failed')
@@ -107,6 +119,44 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
     }
   }
 
+  const handleExtractBrandKit = async () => {
+    if (!pdfUrl) {
+      setSaveStatus('error')
+      return
+    }
+
+    setExtracting(true)
+    setSaveStatus('idle')
+    try {
+      const res = await fetch(`/api/clients/${clientId}/brand-kit/extract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfUrl }),
+      })
+
+      if (!res.ok) throw new Error('Extraction failed')
+      const data = await res.json()
+      setExtractedData(data)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
+    } catch {
+      setSaveStatus('error')
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  const handleApplyExtractedData = () => {
+    if (!extractedData) return
+
+    if (extractedData.primaryColor) setPrimaryColor(extractedData.primaryColor)
+    if (extractedData.secondaryColor) setSecondaryColor(extractedData.secondaryColor)
+    if (extractedData.bgColor) setBgColor(extractedData.bgColor)
+    if (extractedData.accentColor) setAccentColor(extractedData.accentColor)
+    if (extractedData.fontHeadingName) setFontHeadingName(extractedData.fontHeadingName)
+    if (extractedData.fontBodyName) setFontBodyName(extractedData.fontBodyName)
+  }
+
   return (
     <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
       {/* Breadcrumb */}
@@ -129,6 +179,103 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
           Save failed. Please try again.
         </div>
       )}
+
+      {/* PDF Extraction Section */}
+      <section style={{ marginBottom: '3rem', padding: '1.5rem', backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+        <h2 style={{ fontSize: '18px', marginBottom: '1rem', color: '#10263B' }}>Extract from Brand Guidelines PDF</h2>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '14px', color: '#666' }}>
+            PDF URL (or paste Blob URL after upload)
+          </label>
+          <input
+            type="text"
+            value={pdfUrl}
+            onChange={(e) => setPdfUrl(e.target.value)}
+            placeholder="https://..."
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+
+        <button
+          onClick={handleExtractBrandKit}
+          disabled={extracting || !pdfUrl}
+          style={{
+            padding: '0.75rem 1.5rem',
+            backgroundColor: '#B8965A',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            fontWeight: 600,
+            cursor: extracting || !pdfUrl ? 'not-allowed' : 'pointer',
+            opacity: extracting || !pdfUrl ? 0.6 : 1,
+            marginBottom: extractedData ? '1rem' : 0,
+          }}
+        >
+          {extracting ? 'Extracting…' : 'Extract ▶'}
+        </button>
+
+        {extractedData && (
+          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>Extracted Brand Colors & Fonts</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                {extractedData.primaryColor && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: extractedData.primaryColor, borderRadius: '4px', border: '1px solid #ddd' }} />
+                    <span style={{ fontSize: '13px', fontFamily: 'monospace' }}>Primary: {extractedData.primaryColor}</span>
+                  </div>
+                )}
+                {extractedData.secondaryColor && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: extractedData.secondaryColor, borderRadius: '4px', border: '1px solid #ddd' }} />
+                    <span style={{ fontSize: '13px', fontFamily: 'monospace' }}>Secondary: {extractedData.secondaryColor}</span>
+                  </div>
+                )}
+                {extractedData.bgColor && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: extractedData.bgColor, borderRadius: '4px', border: '1px solid #ddd' }} />
+                    <span style={{ fontSize: '13px', fontFamily: 'monospace' }}>BG: {extractedData.bgColor}</span>
+                  </div>
+                )}
+                {extractedData.accentColor && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: extractedData.accentColor, borderRadius: '4px', border: '1px solid #ddd' }} />
+                    <span style={{ fontSize: '13px', fontFamily: 'monospace' }}>Accent: {extractedData.accentColor}</span>
+                  </div>
+                )}
+              </div>
+              {(extractedData.fontHeadingName || extractedData.fontBodyName) && (
+                <div style={{ fontSize: '13px', color: '#666' }}>
+                  {extractedData.fontHeadingName && <p style={{ margin: '0.25rem 0' }}>Heading: <strong>{extractedData.fontHeadingName}</strong></p>}
+                  {extractedData.fontBodyName && <p style={{ margin: '0.25rem 0' }}>Body: <strong>{extractedData.fontBodyName}</strong></p>}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleApplyExtractedData}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#10263B',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              Apply to Brand Kit
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* Colors Section */}
       <section style={{ marginBottom: '3rem' }}>
@@ -188,6 +335,60 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
           </div>
         </div>
 
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
+            Newsletter Background
+          </label>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <input
+              type="color"
+              value={bgColor}
+              onChange={(e) => setBgColor(e.target.value)}
+              style={{ width: '60px', height: '60px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            />
+            <input
+              type="text"
+              value={bgColor}
+              onChange={(e) => setBgColor(e.target.value)}
+              placeholder="#f5f5f0"
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
+            Divider Lines
+          </label>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <input
+              type="color"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              style={{ width: '60px', height: '60px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            />
+            <input
+              type="text"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              placeholder="#1a5c38"
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+              }}
+            />
+          </div>
+        </div>
+
         <button
           onClick={handleSaveColors}
           disabled={saving}
@@ -202,7 +403,7 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
             opacity: saving ? 0.6 : 1,
           }}
         >
-          {saving ? 'Saving…' : 'Save Colors'}
+          {saving ? 'Saving…' : 'Save All'}
         </button>
       </section>
 
@@ -249,10 +450,34 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
       <section>
         <h2 style={{ fontSize: '18px', marginBottom: '1rem', color: '#10263B' }}>Fonts</h2>
 
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
             Heading Font
           </label>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '13px', color: '#666' }}>
+              Google Font Name (e.g. "Instrument Serif")
+            </label>
+            <input
+              type="text"
+              value={fontHeadingName}
+              onChange={(e) => setFontHeadingName(e.target.value)}
+              placeholder="e.g. Instrument Serif"
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px',
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '0.5rem', fontSize: '13px', color: '#999' }}>
+            — or upload a font file —
+          </div>
+
           <div
             onClick={() => fontHeadingInputRef.current?.click()}
             style={{
@@ -276,7 +501,7 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
               style={{ display: 'none' }}
             />
             <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-              {uploadingFont === 'heading' ? 'Uploading…' : fontHeadingUrl ? `Uploaded: ${fontHeadingUrl.split('/').pop()}` : 'Click to upload heading font'}
+              {uploadingFont === 'heading' ? 'Uploading…' : fontHeadingUrl ? `Uploaded: ${fontHeadingUrl.split('/').pop()}` : 'Click to upload heading font (.woff2, .woff, .ttf, .otf)'}
             </p>
           </div>
         </div>
@@ -285,6 +510,30 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
             Body Font
           </label>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '13px', color: '#666' }}>
+              Google Font Name (e.g. "Plus Jakarta Sans")
+            </label>
+            <input
+              type="text"
+              value={fontBodyName}
+              onChange={(e) => setFontBodyName(e.target.value)}
+              placeholder="e.g. Plus Jakarta Sans"
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px',
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '0.5rem', fontSize: '13px', color: '#999' }}>
+            — or upload a font file —
+          </div>
+
           <div
             onClick={() => fontBodyInputRef.current?.click()}
             style={{
@@ -308,7 +557,7 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
               style={{ display: 'none' }}
             />
             <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-              {uploadingFont === 'body' ? 'Uploading…' : fontBodyUrl ? `Uploaded: ${fontBodyUrl.split('/').pop()}` : 'Click to upload body font'}
+              {uploadingFont === 'body' ? 'Uploading…' : fontBodyUrl ? `Uploaded: ${fontBodyUrl.split('/').pop()}` : 'Click to upload body font (.woff2, .woff, .ttf, .otf)'}
             </p>
           </div>
         </div>

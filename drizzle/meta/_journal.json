@@ -36,6 +36,20 @@
       "when": 1742641200000,
       "tag": "0004_brand_refactor",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1742900400000,
+      "tag": "0005_design_engine",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1741701600000,
+      "tag": "0006_brand_studio",
+      "breakpoints": true
     }
   ]
 }

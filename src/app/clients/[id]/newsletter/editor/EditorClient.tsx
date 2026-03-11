@@ -4,6 +4,9 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { type ModuleDef } from '@/lib/module-registry'
 import { extractModuleBlocks, serializeModuleArray } from '@/lib/module-parser'
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import styles from './editor.module.css'
 
 interface ModuleBlock {
@@ -128,6 +131,7 @@ function ModuleCard({
   onBriefChange,
   onGenerate,
   onRemove,
+  sortableId,
 }: {
   block: ModuleBlock
   moduleDefs: ModuleDef[]
@@ -135,16 +139,24 @@ function ModuleCard({
   onBriefChange: (brief: string) => void
   onGenerate: () => void
   onRemove: () => void
+  sortableId: string
 }) {
   const def = getModuleDef(block.name, moduleDefs)
   const [rawMode, setRawMode] = useState(false)
-  const isRequired = block.name === 'Meta'
+  const isRequired = def?.required ?? false
   const isOptional = !isRequired
 
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: sortableId })
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
   return (
-    <div className={styles.card}>
-      <div className={styles.cardHeader}>
+    <div className={styles.card} ref={setNodeRef} style={sortableStyle}>
+      <div className={styles.cardHeader} {...attributes} {...listeners}>
         <div className={styles.cardTitleRow}>
+          <span className={styles.dragHandle}>⠿</span>
           <span className={styles.cardTitle}>{def?.label ?? block.name}</span>
           {isRequired && <span className={styles.badgeRequired}>Required</span>}
           {isOptional && <span className={styles.badgeOptional}>Optional</span>}
@@ -221,9 +233,15 @@ function ModuleCard({
 }
 
 export default function EditorClient({ initialContent, clientId, editionId, moduleDefs }: Props) {
-  const [blocks, setBlocks] = useState<ModuleBlock[]>(() =>
-    extractModuleBlocks(initialContent).map((b) => ({ ...b, brief: '', generating: false }))
-  )
+  const [blocks, setBlocks] = useState<ModuleBlock[]>(() => {
+    const parsed = extractModuleBlocks(initialContent)
+      .map((b) => ({ ...b, brief: '', generating: false }))
+    const presentNames = new Set(parsed.map((b) => b.name))
+    const requiredMissing = moduleDefs
+      .filter((m) => m.required && !presentNames.has(m.name))
+      .map((m) => ({ name: m.name, yaml: '', brief: '', generating: false }))
+    return [...requiredMissing, ...parsed]
+  })
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [addingModule, setAddingModule] = useState(false)
@@ -248,6 +266,17 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     setAddingModule(false)
   }, [])
 
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setBlocks((prev) => {
+        const oldIndex = prev.findIndex((b) => b.name === active.id)
+        const newIndex = prev.findIndex((b) => b.name === over.id)
+        return arrayMove(prev, oldIndex, newIndex)
+      })
+    }
+  }, [])
+
   const handleGenerate = useCallback(
     async (idx: number) => {
       const block = blocks[idx]
@@ -265,7 +294,12 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
         })
         if (!res.ok) throw new Error('Generate request failed')
         const { yaml } = await res.json() as { yaml: string }
-        updateBlock(idx, { yaml, generating: false })
+        let finalYaml = yaml
+        if (block.name === 'DirectorUpdate') {
+          finalYaml = setYamlValue(finalYaml, 'signature_name', '')
+          finalYaml = setYamlValue(finalYaml, 'signature_title', '')
+        }
+        updateBlock(idx, { yaml: finalYaml, generating: false })
       } catch {
         updateBlock(idx, { generating: false })
         alert('Generation failed. Check your OPENAI_API_KEY.')
@@ -352,17 +386,22 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
       </div>
 
       <div className={styles.modules}>
-        {blocks.map((block, idx) => (
-          <ModuleCard
-            key={`${block.name}-${idx}`}
-            block={block}
-            moduleDefs={moduleDefs}
-            onYamlChange={(yaml) => updateBlock(idx, { yaml })}
-            onBriefChange={(brief) => updateBlock(idx, { brief })}
-            onGenerate={() => handleGenerate(idx)}
-            onRemove={() => removeBlock(idx)}
-          />
-        ))}
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={blocks.map((b) => b.name)} strategy={verticalListSortingStrategy}>
+            {blocks.map((block, idx) => (
+              <ModuleCard
+                key={`${block.name}-${idx}`}
+                block={block}
+                moduleDefs={moduleDefs}
+                onYamlChange={(yaml) => updateBlock(idx, { yaml })}
+                onBriefChange={(brief) => updateBlock(idx, { brief })}
+                onGenerate={() => handleGenerate(idx)}
+                onRemove={() => removeBlock(idx)}
+                sortableId={block.name}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
 
       <div className={styles.addModuleRow}>

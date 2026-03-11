@@ -7,13 +7,13 @@
   background: #fff;
   padding: 10mm 12mm 8mm;
   position: relative;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: var(--text);
+  font-family: var(--font-body);
+  color: var(--brand-text);
 }
 
 .rule {
   border: none;
-  border-top: 2px solid var(--brand-secondary);
+  border-top: 2px solid var(--brand-accent);
   margin: 4mm 0;
 }
 

@@ -16,6 +16,11 @@
   --brand-primary:   #006938;
   --brand-secondary: #1a5c38;
   --brand-bg:        #f5f5f0;
+  --brand-accent:    #1a5c38;
+  --brand-text: #10263B;
+  --brand-heading-size: 22px;
+  --brand-body-size: 13px;
+  --brand-radius: 6px;
 }
 
 *,

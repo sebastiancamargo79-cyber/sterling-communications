@@ -31,6 +31,15 @@ export async function GET(
 const brandKitSchema = z.object({
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
+  bgColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  textColor: z.string().optional(),
+  fontHeadingName: z.string().optional(),
+  fontBodyName: z.string().optional(),
+  headingFontSize: z.string().optional(),
+  bodyFontSize: z.string().optional(),
+  cardBorderRadius: z.string().optional(),
+  layoutDensity: z.string().optional(),
 })
 
 export async function PUT(
@@ -66,6 +75,33 @@ export async function PUT(
     }
     if (parsed.data.secondaryColor !== undefined) {
       updateData.secondaryColor = parsed.data.secondaryColor
+    }
+    if (parsed.data.bgColor !== undefined) {
+      updateData.bgColor = parsed.data.bgColor
+    }
+    if (parsed.data.accentColor !== undefined) {
+      updateData.accentColor = parsed.data.accentColor
+    }
+    if (parsed.data.textColor !== undefined) {
+      updateData.textColor = parsed.data.textColor
+    }
+    if (parsed.data.fontHeadingName !== undefined) {
+      updateData.fontHeadingName = parsed.data.fontHeadingName
+    }
+    if (parsed.data.fontBodyName !== undefined) {
+      updateData.fontBodyName = parsed.data.fontBodyName
+    }
+    if (parsed.data.headingFontSize !== undefined) {
+      updateData.headingFontSize = parsed.data.headingFontSize
+    }
+    if (parsed.data.bodyFontSize !== undefined) {
+      updateData.bodyFontSize = parsed.data.bodyFontSize
+    }
+    if (parsed.data.cardBorderRadius !== undefined) {
+      updateData.cardBorderRadius = parsed.data.cardBorderRadius
+    }
+    if (parsed.data.layoutDensity !== undefined) {
+      updateData.layoutDensity = parsed.data.layoutDensity
     }
 
     const [updated] = await db

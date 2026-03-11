@@ -13,6 +13,7 @@ export interface ModuleDef {
   storageKey: string  // newsletter schema key, e.g. "meta"
   fields: FieldDef[]
   aiPromptTemplate: string
+  required?: boolean  // if true, module cannot be removed
 }
 
 export const MODULE_REGISTRY: ModuleDef[] = [
@@ -34,6 +35,7 @@ office_name: "[Office Name]"
 phone: "phone number"
 website: "website url"
 email: "email address"`,
+    required: true,
   },
   {
     name: 'Cover',
@@ -53,6 +55,7 @@ teasers:
   - "Teaser line 4"
   - "Teaser line 5"
 Include 3 to 5 teasers that preview newsletter content. Each max 40 characters.`,
+    required: true,
   },
   {
     name: 'DirectorUpdate',

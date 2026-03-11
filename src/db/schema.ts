@@ -12,10 +12,19 @@ export const brandKits = pgTable('brand_kits', {
   mode: text('mode').notNull(),
   primaryColor: text('primary_color'),
   secondaryColor: text('secondary_color'),
+  bgColor: text('bg_color'),
+  accentColor: text('accent_color'),
+  textColor: text('text_color'),
   logoUrl: text('logo_url'),
   guidelinesPdfUrl: text('guidelines_pdf_url'),
   fontHeadingUrl: text('font_heading_url'),
   fontBodyUrl: text('font_body_url'),
+  fontHeadingName: text('font_heading_name'),
+  fontBodyName: text('font_body_name'),
+  headingFontSize: text('heading_font_size'),
+  bodyFontSize: text('body_font_size'),
+  cardBorderRadius: text('card_border_radius'),
+  layoutDensity: text('layout_density'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
 
@@ -48,5 +57,12 @@ export const moduleDefinitions = pgTable('module_definitions', {
   isSystem: boolean('is_system').default(false).notNull(),
   sortOrder: integer('sort_order').default(0).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const brandConversations = pgTable('brand_conversations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  messages: jsonb('messages').notNull().default([]),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
