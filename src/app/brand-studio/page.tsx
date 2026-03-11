@@ -17,7 +17,8 @@ export default async function BrandStudioPage() {
 
   // Group by client (in case multiple brand kits)
   const clientMap = new Map<string, { name: string; hasBrandKit: boolean }>()
-  clientsWithKits.forEach(({ clientId, clientName, hasBrandKit }) => {
+  clientsWithKits.forEach((row: any) => {
+    const { clientId, clientName, hasBrandKit } = row
     if (!clientMap.has(clientId)) {
       clientMap.set(clientId, {
         name: clientName,
