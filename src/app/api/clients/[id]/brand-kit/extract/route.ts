@@ -35,7 +35,7 @@ async function downloadPdf(url: string): Promise<Buffer> {
 async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
   try {
     // Dynamic import to avoid bundling issues
-    const pdfParse = await import('pdf-parse')
+    const { default: pdfParse } = await import('pdf-parse')
     const pdfData = await pdfParse(pdfBuffer)
 
     // Get text from first 3 pages max
