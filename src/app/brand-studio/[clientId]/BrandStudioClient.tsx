@@ -657,3 +657,5 @@ export default function BrandStudioClient({
     </main>
   )
 }
+
+export default BrandStudioClient
