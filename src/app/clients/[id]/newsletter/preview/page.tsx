@@ -1,7 +1,8 @@
 import { ZodError } from 'zod'
 import { parseNewsletter, NoDraftError } from '@/lib/newsletter-parser'
+import { extractModuleBlocks } from '@/lib/module-parser'
 import { db } from '@/db'
-import { brandKits, clients, newsletterEditions } from '@/db/schema'
+import { brandKits, clients, newsletterEditions, newsletterDrafts } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { PrintButton } from '@/components/newsletter/PrintButton'
 import { DownloadPdfButton } from '@/components/newsletter/DownloadPdfButton'
@@ -26,6 +27,7 @@ export default async function ClientNewsletterPreview({
   const { editionId } = await searchParams
 
   let data
+  let moduleOrder: string[] = []
 
   try {
     // If editionId is provided, fetch edition content; otherwise use draft
@@ -44,8 +46,17 @@ export default async function ClientNewsletterPreview({
         )
       }
       data = await parseNewsletter(edition.rawContent)
+      moduleOrder = extractModuleBlocks(edition.rawContent).map((b) => b.name)
     } else {
-      data = await parseNewsletter(undefined, id)
+      const draft = await db.query.newsletterDrafts.findFirst({
+        where: eq(newsletterDrafts.clientId, id),
+      })
+      if (draft?.rawContent) {
+        data = await parseNewsletter(draft.rawContent)
+        moduleOrder = extractModuleBlocks(draft.rawContent).map((b) => b.name)
+      } else {
+        data = await parseNewsletter(undefined, id)
+      }
     }
   } catch (err) {
     if (err instanceof NoDraftError) {
@@ -108,6 +119,35 @@ export default async function ClientNewsletterPreview({
     '--brand-secondary': brandColors.secondary,
   } as React.CSSProperties
 
+  // Map module names to their storage keys and render components
+  const moduleNameToStorageKey: { [key: string]: string } = {
+    'Meta': 'meta',
+    'Cover': 'cover',
+    'DirectorUpdate': 'director_update',
+    'Events': 'events',
+    'ClientStory': 'client_story',
+    'StaffSpotlight': 'spotlight',
+    'Tips': 'tips',
+    'Community': 'community',
+  }
+
+  const renderModulePage = (storageKey: string) => {
+    switch (storageKey) {
+      case 'cover':
+        return data.cover ? <Page1Cover key="cover" data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl} /> : null
+      case 'director_update':
+        return data.director_update ? <Page2DirectorUpdate key="director_update" data={data.director_update} meta={data.meta} /> : null
+      case 'events':
+        return data.events ? <Page3Diary key="events" events={data.events} meta={data.meta} /> : null
+      case 'client_story':
+        return data.client_story ? <Page4ClientStory key="client_story" data={data.client_story} meta={data.meta} /> : null
+      case 'spotlight':
+        return data.spotlight ? <Page5Spotlight key="spotlight" data={data.spotlight} meta={data.meta} employerName={client?.name ?? 'Home Care'} /> : null
+      default:
+        return null
+    }
+  }
+
   return (
     <div className={styles.wrapper} style={styleVars}>
       <div className={styles.printBar}>
@@ -119,12 +159,24 @@ export default async function ClientNewsletterPreview({
         <PrintButton />
       </div>
       <div className={styles.pages}>
-        {data.cover && <Page1Cover data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl} />}
-        {data.director_update && <Page2DirectorUpdate data={data.director_update} meta={data.meta} />}
-        {data.events && <Page3Diary events={data.events} meta={data.meta} />}
-        {data.client_story && <Page4ClientStory data={data.client_story} meta={data.meta} />}
-        {data.spotlight && <Page5Spotlight data={data.spotlight} meta={data.meta} employerName={client?.name ?? 'Home Care'} />}
-        {(data.tips || data.community) && <Page6Tips tips={data.tips} community={data.community} meta={data.meta} />}
+        {(() => {
+          let page6Rendered = false
+          return moduleOrder
+            .filter((name) => name !== 'Meta')
+            .map((moduleName) => {
+              const storageKey = moduleNameToStorageKey[moduleName]
+              if (!storageKey) return null
+
+              if (storageKey === 'tips' || storageKey === 'community') {
+                if (page6Rendered) return null
+                page6Rendered = true
+                return (data.tips || data.community)
+                  ? <Page6Tips key="tips_community" tips={data.tips} community={data.community} meta={data.meta} />
+                  : null
+              }
+              return renderModulePage(storageKey)
+            })
+        })()}
       </div>
     </div>
   )

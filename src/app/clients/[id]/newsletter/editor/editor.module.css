@@ -374,6 +374,20 @@
   gap: 0.75rem;
 }
 
+/* Drag handle */
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: grab;
+  user-select: none;
+  font-size: 1rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.dragHandle:active { cursor: grabbing; }
+
 /* Top bar layout */
 .topBarCenter {
   flex: 1;
