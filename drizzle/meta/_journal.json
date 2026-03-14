@@ -50,6 +50,13 @@
       "when": 1741701600000,
       "tag": "0006_brand_studio",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1741788000000,
+      "tag": "0007_reset_schema",
+      "breakpoints": true
     }
   ]
 }
