@@ -28,15 +28,40 @@ async function downloadPdf(url: string): Promise<Buffer> {
   if (!response.ok) {
     throw new Error(`Failed to download PDF: ${response.statusText}`)
   }
+
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('pdf')) {
+    throw new Error(`Invalid content type: ${contentType}. Expected PDF.`)
+  }
+
   const arrayBuffer = await response.arrayBuffer()
+  if (arrayBuffer.byteLength === 0) {
+    throw new Error('Downloaded PDF file is empty')
+  }
+
   return Buffer.from(arrayBuffer)
 }
 
 async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
   try {
     // Dynamic import to avoid bundling issues
-    const { default: pdfParse } = await import('pdf-parse')
+    const pdfParseModule = await import('pdf-parse')
+    const pdfParse = pdfParseModule.default
+
+    if (typeof pdfParse !== 'function') {
+      throw new Error('pdf-parse module not loaded correctly')
+    }
+
     const pdfData = await pdfParse(pdfBuffer)
+
+    // Validate PDF data structure
+    if (!pdfData) {
+      throw new Error('pdf-parse returned no data')
+    }
+
+    if (!Array.isArray(pdfData.pages)) {
+      throw new Error(`Invalid PDF data structure: pages is ${typeof pdfData.pages}`)
+    }
 
     // Get text from first 3 pages max
     const pages = pdfData.pages.slice(0, 3)
