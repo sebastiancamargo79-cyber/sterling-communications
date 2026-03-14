@@ -6,32 +6,36 @@ import { eq } from 'drizzle-orm'
 import styles from './page.module.css'
 
 export default async function BrandStudioPage() {
-  const clientsWithKits = await db
-    .select({
-      clientId: clients.id,
-      clientName: clients.name,
-      hasBrandKit: brandKits.id,
-    })
-    .from(clients)
-    .leftJoin(brandKits, eq(clients.id, brandKits.clientId))
+  let clientList: Array<{ id: string; name: string; hasBrandKit: boolean }> = []
 
-  // Group by client (in case multiple brand kits)
-  const clientMap = new Map<string, { name: string; hasBrandKit: boolean }>()
-  clientsWithKits.forEach((row: any) => {
-    const { clientId, clientName, hasBrandKit } = row
-    if (!clientMap.has(clientId)) {
-      clientMap.set(clientId, {
-        name: clientName,
-        hasBrandKit: !!hasBrandKit,
+  if (db) {
+    const clientsWithKits = await db
+      .select({
+        clientId: clients.id,
+        clientName: clients.name,
+        hasBrandKit: brandKits.id,
       })
-    }
-  })
+      .from(clients)
+      .leftJoin(brandKits, eq(clients.id, brandKits.clientId))
 
-  const clientList = Array.from(clientMap.entries()).map(([id, { name, hasBrandKit }]) => ({
-    id,
-    name,
-    hasBrandKit,
-  }))
+    // Group by client (in case multiple brand kits)
+    const clientMap = new Map<string, { name: string; hasBrandKit: boolean }>()
+    clientsWithKits.forEach((row: any) => {
+      const { clientId, clientName, hasBrandKit } = row
+      if (!clientMap.has(clientId)) {
+        clientMap.set(clientId, {
+          name: clientName,
+          hasBrandKit: !!hasBrandKit,
+        })
+      }
+    })
+
+    clientList = Array.from(clientMap.entries()).map(([id, { name, hasBrandKit }]) => ({
+      id,
+      name,
+      hasBrandKit,
+    }))
+  }
 
   return (
     <main className={styles.main}>
