@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import Container from '@/components/Container'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
@@ -57,8 +58,10 @@ export default function NewClientPage() {
         setError(body?.error ?? 'Something went wrong. Please try again.')
         return
       }
+      toast.success('Client created')
       router.push('/clients')
     } catch {
+      toast.error('Network error')
       setError('Network error. Please check your connection and try again.')
     } finally {
       setSubmitting(false)

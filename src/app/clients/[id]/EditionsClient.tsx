@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { newsletterEditions } from '@/db/schema'
 import styles from './page.module.css'
 
@@ -26,9 +27,10 @@ export default function EditionsClientComponent({ clientId, editions }: Props) {
         method: 'DELETE',
       })
       if (!res.ok) throw new Error('Delete failed')
+      toast.success('Edition deleted')
       router.refresh()
     } catch (e) {
-      alert('Failed to delete edition')
+      toast.error('Failed to delete edition')
       setDeleting(null)
     }
   }

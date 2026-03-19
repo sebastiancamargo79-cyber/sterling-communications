@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import Container from '@/components/Container'
 import DeleteModal from '@/components/DeleteModal'
 import styles from './page.module.css'
@@ -29,9 +30,13 @@ export default function ClientsClient({ clients }: Props) {
     if (!deletingId) return
     setDeletingInProgress(true)
     try {
-      await fetch(`/api/clients/${deletingId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/clients/${deletingId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      toast.success('Client deleted')
       setDeletingId(null)
       router.refresh()
+    } catch {
+      toast.error('Failed to delete client')
     } finally {
       setDeletingInProgress(false)
     }

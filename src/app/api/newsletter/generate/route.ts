@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import OpenAI from 'openai'
 import { getAllModuleDefs } from '@/lib/module-registry'
 import { db } from '@/db'
-import { clients, brandKits } from '@/db/schema'
+import { clients, brandKits, aiPrompts } from '@/db/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +48,31 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Prompt resolution chain: client override → global override → static aiPromptTemplate
+  let resolvedPrompt = def.aiPromptTemplate
+  try {
+    if (clientId) {
+      const clientOverride = await db.query.aiPrompts.findFirst({
+        where: and(eq(aiPrompts.clientId, clientId), eq(aiPrompts.moduleName, moduleName)),
+      })
+      if (clientOverride) {
+        resolvedPrompt = clientOverride.promptText
+      } else {
+        const globalDefault = await db.query.aiPrompts.findFirst({
+          where: and(isNull(aiPrompts.clientId), eq(aiPrompts.moduleName, moduleName)),
+        })
+        if (globalDefault) resolvedPrompt = globalDefault.promptText
+      }
+    } else {
+      const globalDefault = await db.query.aiPrompts.findFirst({
+        where: and(isNull(aiPrompts.clientId), eq(aiPrompts.moduleName, moduleName)),
+      })
+      if (globalDefault) resolvedPrompt = globalDefault.promptText
+    }
+  } catch {
+    // Fall back to static prompt if DB lookup fails
+  }
+
   const systemPrompt = [
     brandContext
       ? `You are writing for ${brandContext.officeName}, a home care franchise. ${
@@ -56,7 +81,7 @@ export async function POST(req: NextRequest) {
       : `You are an expert content writer for a home care franchise newsletter.`,
     `You are writing the "${def.label}" section.`,
     ``,
-    def.aiPromptTemplate,
+    resolvedPrompt,
     ``,
     `IMPORTANT: Output ONLY the raw YAML content. Do not include :::module: wrapper tags.`,
     `Do not include any explanation or markdown code fences. Output valid YAML only.`,

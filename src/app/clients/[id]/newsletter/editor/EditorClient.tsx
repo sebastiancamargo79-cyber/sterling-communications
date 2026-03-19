@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { type ModuleDef } from '@/lib/module-registry'
 import { extractModuleBlocks, serializeModuleArray } from '@/lib/module-parser'
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import ArrayFieldEditor from '@/components/ArrayFieldEditor'
+import EventFieldEditor from '@/components/EventFieldEditor'
 import styles from './editor.module.css'
 
 interface ModuleBlock {
@@ -124,9 +127,197 @@ function setYamlValue(yaml: string, key: string, newValue: string): string {
   return lines.join('\n')
 }
 
+// Extract YAML array values (e.g. teasers, bullets)
+function extractYamlArray(yaml: string, key: string): string[] {
+  const lines = yaml.split('\n')
+  const keyLine = lines.findIndex((l) => l.startsWith(key + ':'))
+  if (keyLine === -1) return ['']
+  const items: string[] = []
+  for (let i = keyLine + 1; i < lines.length; i++) {
+    const line = lines[i]
+    const match = line.match(/^\s+-\s+["']?(.*?)["']?\s*$/)
+    if (match) {
+      items.push(match[1])
+    } else if (line.trim() && !line.startsWith(' ') && !line.startsWith('-')) {
+      break
+    }
+  }
+  return items.length > 0 ? items : ['']
+}
+
+// Serialize array back to YAML
+function setYamlArray(yaml: string, key: string, values: string[]): string {
+  const lines = yaml.split('\n')
+  const keyLine = lines.findIndex((l) => l.startsWith(key + ':'))
+  const arrayYaml = values.map((v) => `  - "${v}"`).join('\n')
+
+  if (keyLine === -1) {
+    return yaml + `\n${key}:\n${arrayYaml}\n`
+  }
+
+  // Find end of existing array
+  let endLine = keyLine + 1
+  while (endLine < lines.length) {
+    const line = lines[endLine]
+    if (line.match(/^\s+-/)) {
+      endLine++
+    } else {
+      break
+    }
+  }
+  lines.splice(keyLine, endLine - keyLine, `${key}:\n${arrayYaml}`)
+  return lines.join('\n')
+}
+
+// Parse events from full YAML block
+interface EventItem {
+  type: string
+  title?: string
+  date?: string
+  time?: string
+  location?: string
+  description?: string
+  image_url?: string
+  caption?: string
+}
+
+function parseEventsFromYaml(yaml: string): EventItem[] {
+  const items: EventItem[] = []
+  const lines = yaml.split('\n')
+  let current: Record<string, string> | null = null
+
+  for (const line of lines) {
+    const itemStart = line.match(/^-\s+(\w+):\s*(.*)$/)
+    if (itemStart) {
+      if (current) items.push(current as unknown as EventItem)
+      current = { [itemStart[1]]: itemStart[2].replace(/^["']|["']$/g, '') }
+      continue
+    }
+    const fieldMatch = line.match(/^\s+(\w+):\s*(.*)$/)
+    if (fieldMatch && current) {
+      current[fieldMatch[1]] = fieldMatch[2].replace(/^["']|["']$/g, '')
+    }
+  }
+  if (current) items.push(current as unknown as EventItem)
+  return items.length > 0 ? items : [{ type: 'event', title: '', date: '', time: '', location: '', description: '' }]
+}
+
+function serializeEventsToYaml(events: EventItem[]): string {
+  return events.map((e) => {
+    if (e.type === 'photo') {
+      return `- type: photo\n  image_url: "${e.image_url ?? ''}"\n  caption: "${e.caption ?? ''}"`
+    }
+    return [
+      `- type: event`,
+      `  title: "${e.title ?? ''}"`,
+      `  date: "${e.date ?? ''}"`,
+      `  time: "${e.time ?? ''}"`,
+      `  location: "${e.location ?? ''}"`,
+      `  description: "${e.description ?? ''}"`,
+    ].join('\n')
+  }).join('\n')
+}
+
+// Prompt edit modal
+function PromptEditModal({
+  moduleName,
+  moduleLabel,
+  clientId,
+  defaultPrompt,
+  onClose,
+}: {
+  moduleName: string
+  moduleLabel: string
+  clientId: string
+  defaultPrompt: string
+  onClose: () => void
+}) {
+  const [promptText, setPromptText] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/clients/${clientId}/ai-prompts`)
+      .then((r) => r.json())
+      .then((data) => {
+        const match = data.prompts?.find((p: { moduleName: string }) => p.moduleName === moduleName)
+        setPromptText(match?.promptText ?? defaultPrompt)
+        setLoading(false)
+      })
+      .catch(() => {
+        setPromptText(defaultPrompt)
+        setLoading(false)
+      })
+  }, [clientId, moduleName, defaultPrompt])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/ai-prompts/${moduleName}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promptText }),
+      })
+      if (!res.ok) throw new Error()
+      toast.success('AI prompt saved')
+      onClose()
+    } catch {
+      toast.error('Failed to save prompt')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleReset = async () => {
+    setSaving(true)
+    try {
+      await fetch(`/api/clients/${clientId}/ai-prompts/${moduleName}`, { method: 'DELETE' })
+      setPromptText(defaultPrompt)
+      toast.success('Prompt reset to default')
+    } catch {
+      toast.error('Failed to reset prompt')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h3 className={styles.modalTitle}>AI Prompt — {moduleLabel}</h3>
+        <p className={styles.modalHint}>
+          Customise the instructions sent to the AI when generating content for this module.
+        </p>
+        {loading ? (
+          <p style={{ color: '#5a6a7a', fontSize: '0.9rem' }}>Loading…</p>
+        ) : (
+          <>
+            <textarea
+              className={styles.modalTextarea}
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+              rows={12}
+            />
+            <div className={styles.modalActions}>
+              <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving…' : 'Save Prompt'}
+              </button>
+              <button className={styles.btnSmall} onClick={handleReset} disabled={saving}>
+                Reset to Default
+              </button>
+              <button className={styles.btnCancelSmall} onClick={onClose}>Cancel</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ModuleCard({
   block,
   moduleDefs,
+  clientId,
   onYamlChange,
   onBriefChange,
   onGenerate,
@@ -135,6 +326,7 @@ function ModuleCard({
 }: {
   block: ModuleBlock
   moduleDefs: ModuleDef[]
+  clientId: string
   onYamlChange: (yaml: string) => void
   onBriefChange: (brief: string) => void
   onGenerate: () => void
@@ -143,6 +335,7 @@ function ModuleCard({
 }) {
   const def = getModuleDef(block.name, moduleDefs)
   const [rawMode, setRawMode] = useState(false)
+  const [promptOpen, setPromptOpen] = useState(false)
   const isRequired = def?.required ?? false
   const isOptional = !isRequired
 
@@ -162,11 +355,18 @@ function ModuleCard({
           {isOptional && <span className={styles.badgeOptional}>Optional</span>}
         </div>
         <div className={styles.cardActions}>
-          <button className={styles.btnSmall} onClick={() => setRawMode((v) => !v)}>
+          <button
+            className={styles.btnSmall}
+            onClick={(e) => { e.stopPropagation(); setPromptOpen(true) }}
+            title="Edit AI prompt"
+          >
+            Edit prompt
+          </button>
+          <button className={styles.btnSmall} onClick={(e) => { e.stopPropagation(); setRawMode((v) => !v) }}>
             {rawMode ? 'Fields' : 'YAML'}
           </button>
           {!isRequired && (
-            <button className={styles.btnDanger} onClick={onRemove}>✕</button>
+            <button className={styles.btnDanger} onClick={(e) => { e.stopPropagation(); onRemove() }}>✕</button>
           )}
         </div>
       </div>
@@ -185,19 +385,25 @@ function ModuleCard({
           </div>
         ) : (
           def.fields.map((field) => {
-            if (field.type === 'events' || field.type === 'array') {
+            if (field.type === 'events') {
+              const events = parseEventsFromYaml(block.yaml)
               return (
-                <div key={field.key} className={styles.field}>
-                  <label className={styles.fieldLabel}>{field.label}</label>
-                  <textarea
-                    className={styles.textarea}
-                    value={block.yaml}
-                    onChange={(e) => onYamlChange(e.target.value)}
-                    rows={12}
-                    spellCheck={false}
-                    placeholder="YAML list format"
-                  />
-                </div>
+                <EventFieldEditor
+                  key={field.key}
+                  events={events}
+                  onChange={(newEvents) => onYamlChange(serializeEventsToYaml(newEvents))}
+                />
+              )
+            }
+            if (field.type === 'array') {
+              const values = extractYamlArray(block.yaml, field.key)
+              return (
+                <ArrayFieldEditor
+                  key={field.key}
+                  label={field.label}
+                  values={values}
+                  onChange={(newValues) => onYamlChange(setYamlArray(block.yaml, field.key, newValues))}
+                />
               )
             }
             return (
@@ -224,10 +430,20 @@ function ModuleCard({
             onClick={onGenerate}
             disabled={block.generating || !block.brief.trim()}
           >
-            {block.generating ? <span className={styles.spinner}>Generating…</span> : '✨ Generate'}
+            {block.generating ? <span className={styles.spinner}>Generating…</span> : 'Generate'}
           </button>
         </div>
       </div>
+
+      {promptOpen && def && (
+        <PromptEditModal
+          moduleName={block.name}
+          moduleLabel={def.label}
+          clientId={clientId}
+          defaultPrompt={def.aiPromptTemplate}
+          onClose={() => setPromptOpen(false)}
+        />
+      )}
     </div>
   )
 }
@@ -243,12 +459,10 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     return [...requiredMissing, ...parsed]
   })
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [addingModule, setAddingModule] = useState(false)
   const [editionOpen, setEditionOpen] = useState(false)
   const [editionTitle, setEditionTitle] = useState('')
   const [savingEdition, setSavingEdition] = useState(false)
-  const [editionSaved, setEditionSaved] = useState(false)
 
   const existingNames = new Set(blocks.map((b) => b.name))
   const availableToAdd = moduleDefs.map((m) => m.name).filter((n) => !existingNames.has(n))
@@ -300,17 +514,17 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
           finalYaml = setYamlValue(finalYaml, 'signature_title', '')
         }
         updateBlock(idx, { yaml: finalYaml, generating: false })
+        toast.success('Content generated')
       } catch {
         updateBlock(idx, { generating: false })
-        alert('Generation failed. Check your OPENAI_API_KEY.')
+        toast.error('Generation failed. Check your OPENAI_API_KEY.')
       }
     },
     [blocks, updateBlock, clientId]
   )
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setSaving(true)
-    setSaveStatus('idle')
     try {
       const rawContent = serializeModuleArray(blocks)
       const endpoint = editionId
@@ -323,27 +537,36 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
         body: JSON.stringify({ rawContent }),
       })
       if (!res.ok) throw new Error('Save failed')
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
+      toast.success('Draft saved')
     } catch {
-      setSaveStatus('error')
+      toast.error('Failed to save draft')
     } finally {
       setSaving(false)
     }
-  }
+  }, [blocks, clientId, editionId])
+
+  // Cmd+S / Ctrl+S keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [handleSave])
 
   const handleSaveEdition = async () => {
     if (!editionTitle.trim()) return
     setSavingEdition(true)
     try {
-      // Save draft first
       const rawContent = serializeModuleArray(blocks)
       await fetch(`/api/clients/${clientId}/newsletter`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawContent }),
       })
-      // Then create edition
       const res = await fetch(`/api/clients/${clientId}/newsletter/editions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -352,9 +575,12 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
       if (res.ok) {
         setEditionTitle('')
         setEditionOpen(false)
-        setEditionSaved(true)
-        setTimeout(() => setEditionSaved(false), 3000)
+        toast.success('Edition saved')
+      } else {
+        toast.error('Failed to save edition')
       }
+    } catch {
+      toast.error('Failed to save edition')
     } finally {
       setSavingEdition(false)
     }
@@ -370,9 +596,6 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
           <h1 className={styles.topBarTitle}>Newsletter Editor</h1>
         </div>
         <div className={styles.topBarActions}>
-          {saveStatus === 'saved' && <span className={styles.savedMsg}>Saved ✓</span>}
-          {saveStatus === 'error' && <span className={styles.errorMsg}>Save failed</span>}
-
           <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -380,7 +603,7 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
             href={editionId ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}` : `/clients/${clientId}/newsletter/preview`}
             className={styles.btnPreview}
           >
-            Preview →
+            Preview
           </Link>
         </div>
       </div>
@@ -393,6 +616,7 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
                 key={`${block.name}-${idx}`}
                 block={block}
                 moduleDefs={moduleDefs}
+                clientId={clientId}
                 onYamlChange={(yaml) => updateBlock(idx, { yaml })}
                 onBriefChange={(brief) => updateBlock(idx, { brief })}
                 onGenerate={() => handleGenerate(idx)}

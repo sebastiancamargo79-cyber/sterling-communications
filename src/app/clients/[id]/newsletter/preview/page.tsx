@@ -1,6 +1,7 @@
 import { ZodError } from 'zod'
 import { parseNewsletter, NoDraftError } from '@/lib/newsletter-parser'
 import { extractModuleBlocks } from '@/lib/module-parser'
+import { getAllModuleDefs } from '@/lib/module-registry'
 import { db } from '@/db'
 import { brandKits, clients, newsletterEditions, newsletterDrafts } from '@/db/schema'
 import { eq } from 'drizzle-orm'
@@ -12,6 +13,8 @@ import Page3Diary from '@/components/newsletter/Page3Diary'
 import Page4ClientStory from '@/components/newsletter/Page4ClientStory'
 import Page5Spotlight from '@/components/newsletter/Page5Spotlight'
 import Page6Tips from '@/components/newsletter/Page6Tips'
+import GenericModuleCard from '@/components/newsletter/GenericModuleCard'
+import BrokenImageHandler from '@/components/newsletter/BrokenImageHandler'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -28,9 +31,9 @@ export default async function ClientNewsletterPreview({
 
   let data
   let moduleOrder: string[] = []
+  let rawBlocks: Array<{ name: string; yaml: string }> = []
 
   try {
-    // If editionId is provided, fetch edition content; otherwise use draft
     if (editionId) {
       const edition = await db.query.newsletterEditions.findFirst({
         where: eq(newsletterEditions.id, editionId),
@@ -46,14 +49,16 @@ export default async function ClientNewsletterPreview({
         )
       }
       data = await parseNewsletter(edition.rawContent)
-      moduleOrder = extractModuleBlocks(edition.rawContent).map((b) => b.name)
+      rawBlocks = extractModuleBlocks(edition.rawContent)
+      moduleOrder = rawBlocks.map((b) => b.name)
     } else {
       const draft = await db.query.newsletterDrafts.findFirst({
         where: eq(newsletterDrafts.clientId, id),
       })
       if (draft?.rawContent) {
         data = await parseNewsletter(draft.rawContent)
-        moduleOrder = extractModuleBlocks(draft.rawContent).map((b) => b.name)
+        rawBlocks = extractModuleBlocks(draft.rawContent)
+        moduleOrder = rawBlocks.map((b) => b.name)
       } else {
         data = await parseNewsletter(undefined, id)
       }
@@ -99,7 +104,6 @@ export default async function ClientNewsletterPreview({
     throw err
   }
 
-  // Fetch brand kit and client for brand colors
   const brandKit = await db.query.brandKits.findFirst({
     where: eq(brandKits.clientId, id),
   })
@@ -107,6 +111,9 @@ export default async function ClientNewsletterPreview({
   const client = await db.query.clients.findFirst({
     where: eq(clients.id, id),
   })
+
+  // Fetch all module defs for generic rendering
+  const allModuleDefs = await getAllModuleDefs()
 
   const brandColors = {
     primary: brandKit?.primaryColor ?? '#006938',
@@ -116,12 +123,10 @@ export default async function ClientNewsletterPreview({
     text: brandKit?.textColor ?? '#10263B',
   }
 
-  // Google Fonts resolution
   const googleFontsLinks: string[] = []
   if (brandKit?.fontHeadingName) googleFontsLinks.push(brandKit.fontHeadingName)
   if (brandKit?.fontBodyName) googleFontsLinks.push(brandKit.fontBodyName)
 
-  // Font family strings for CSS vars
   const fontHeadingFamily = brandKit?.fontHeadingName
     ? `'${brandKit.fontHeadingName}', serif`
     : 'Georgia, serif'
@@ -129,7 +134,6 @@ export default async function ClientNewsletterPreview({
     ? `'${brandKit.fontBodyName}', sans-serif`
     : 'system-ui, sans-serif'
 
-  // Inject CSS variables as inline styles
   const styleVars = {
     '--brand-primary': brandColors.primary,
     '--brand-secondary': brandColors.secondary,
@@ -143,8 +147,8 @@ export default async function ClientNewsletterPreview({
     '--brand-radius': brandKit?.cardBorderRadius ?? '6px',
   } as React.CSSProperties
 
-  // Map module names to their storage keys and render components
-  const moduleNameToStorageKey: { [key: string]: string } = {
+  // Known system module storage keys
+  const knownStorageKeys: Record<string, string> = {
     'Meta': 'meta',
     'Cover': 'cover',
     'DirectorUpdate': 'director_update',
@@ -155,42 +159,58 @@ export default async function ClientNewsletterPreview({
     'Community': 'community',
   }
 
-  const renderModulePage = (storageKey: string) => {
-    switch (storageKey) {
-      case 'cover':
-        return data.cover ? <Page1Cover key="cover" data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl} /> : null
-      case 'director_update':
-        return data.director_update ? <Page2DirectorUpdate key="director_update" data={data.director_update} meta={data.meta} /> : null
-      case 'events':
-        return data.events ? <Page3Diary key="events" events={data.events} meta={data.meta} /> : null
-      case 'client_story':
-        return data.client_story ? <Page4ClientStory key="client_story" data={data.client_story} meta={data.meta} /> : null
-      case 'spotlight':
-        return data.spotlight ? <Page5Spotlight key="spotlight" data={data.spotlight} meta={data.meta} employerName={client?.name ?? 'Home Care'} /> : null
-      default:
-        return null
+  const renderModulePage = (moduleName: string) => {
+    const storageKey = knownStorageKeys[moduleName]
+
+    if (storageKey) {
+      switch (storageKey) {
+        case 'cover':
+          return data.cover ? <Page1Cover key="cover" data={data.cover} meta={data.meta} logoUrl={brandKit?.logoUrl} /> : null
+        case 'director_update':
+          return data.director_update ? <Page2DirectorUpdate key="director_update" data={data.director_update} meta={data.meta} /> : null
+        case 'events':
+          return data.events ? <Page3Diary key="events" events={data.events} meta={data.meta} /> : null
+        case 'client_story':
+          return data.client_story ? <Page4ClientStory key="client_story" data={data.client_story} meta={data.meta} /> : null
+        case 'spotlight':
+          return data.spotlight ? <Page5Spotlight key="spotlight" data={data.spotlight} meta={data.meta} employerName={client?.name ?? 'Home Care'} /> : null
+        default:
+          return null
+      }
     }
+
+    // Custom/unknown module — render generic card
+    const block = rawBlocks.find((b) => b.name === moduleName)
+    if (!block) return null
+    const moduleDef = allModuleDefs.find((m) => m.name === moduleName)
+    return (
+      <GenericModuleCard
+        key={moduleName}
+        moduleName={moduleName}
+        label={moduleDef?.label ?? moduleName}
+        yaml={block.yaml}
+      />
+    )
   }
 
   return (
     <>
-      {/* Google Fonts link if names provided */}
       {googleFontsLinks.length > 0 && (
         <link
           href={`https://fonts.googleapis.com/css2?${googleFontsLinks.map(f => `family=${encodeURIComponent(f)}:wght@400;600;700`).join('&')}&display=swap`}
           rel="stylesheet"
         />
       )}
-      {/* @font-face for uploaded files */}
       {(brandKit?.fontHeadingUrl || brandKit?.fontBodyUrl) && (
         <style>{[
           brandKit.fontHeadingUrl && `@font-face { font-family: 'BrandHeading'; src: url('${brandKit.fontHeadingUrl}'); }`,
           brandKit.fontBodyUrl && `@font-face { font-family: 'BrandBody'; src: url('${brandKit.fontBodyUrl}'); }`,
         ].filter(Boolean).join('\n')}</style>
       )}
+      <BrokenImageHandler />
       <div className={styles.wrapper} style={styleVars}>
         <div className={styles.printBar}>
-          <a href={`/clients/${id}`} className={styles.backLink}>← Back to Client</a>
+          <a href={`/clients/${id}`} className={styles.backLink}>&larr; Back to Client</a>
           <span className={styles.printBarTitle}>
             {data.meta.office_name} — {data.meta.month} Newsletter
           </span>
@@ -203,8 +223,7 @@ export default async function ClientNewsletterPreview({
             return moduleOrder
               .filter((name) => name !== 'Meta')
               .map((moduleName) => {
-                const storageKey = moduleNameToStorageKey[moduleName]
-                if (!storageKey) return null
+                const storageKey = knownStorageKeys[moduleName]
 
                 if (storageKey === 'tips' || storageKey === 'community') {
                   if (page6Rendered) return null
@@ -213,7 +232,7 @@ export default async function ClientNewsletterPreview({
                     ? <Page6Tips key="tips_community" tips={data.tips} community={data.community} meta={data.meta} />
                     : null
                 }
-                return renderModulePage(storageKey)
+                return renderModulePage(moduleName)
               })
           })()}
         </div>

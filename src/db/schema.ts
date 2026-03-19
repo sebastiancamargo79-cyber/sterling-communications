@@ -59,6 +59,15 @@ export const moduleDefinitions = pgTable('module_definitions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export const aiPrompts = pgTable('ai_prompts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }),
+  moduleName: text('module_name').notNull(),
+  promptText: text('prompt_text').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 export const brandConversations = pgTable('brand_conversations', {
   id: uuid('id').defaultRandom().primaryKey(),
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),

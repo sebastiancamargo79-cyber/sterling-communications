@@ -14,9 +14,12 @@ export default function AdminPage() {
 
         <div className={styles.grid}>
           <Link href="/admin/modules" className={styles.card}>
-            <span className={styles.cardIcon}>⚙️</span>
             <span className={styles.cardTitle}>Newsletter Modules</span>
             <span className={styles.cardDesc}>View and create custom newsletter module definitions</span>
+          </Link>
+          <Link href="/admin/ai-prompts" className={styles.card}>
+            <span className={styles.cardTitle}>AI Prompts</span>
+            <span className={styles.cardDesc}>Edit global default prompts for AI content generation</span>
           </Link>
         </div>
       </Container>

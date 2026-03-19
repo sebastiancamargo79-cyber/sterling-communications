@@ -315,3 +315,61 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+.moduleActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btnEdit {
+  padding: 4px 12px;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btnEdit:hover { background: rgba(16,38,59,0.05); border-color: var(--primary); }
+
+.btnDelete {
+  padding: 4px 12px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btnDelete:hover { color: #dc2626; border-color: #dc2626; }
+
+.deleteConfirm {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btnDeleteConfirm {
+  padding: 3px 10px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btnDeleteConfirm:disabled { opacity: 0.6; }
+
+.btnCancelDelete {
+  padding: 3px 10px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}

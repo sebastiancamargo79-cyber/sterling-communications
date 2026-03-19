@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Libre_Baskerville } from 'next/font/google'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const libreBaskerville = Libre_Baskerville({
@@ -21,7 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={libreBaskerville.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster position="bottom-right" richColors closeButton />
+      </body>
     </html>
   )
 }

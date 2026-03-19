@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import styles from './PrintButton.module.css'
 
 export function DownloadPdfButton({ clientId }: { clientId: string }) {
@@ -19,7 +20,7 @@ export function DownloadPdfButton({ clientId }: { clientId: string }) {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      alert('Failed to generate PDF. Please try again.')
+      toast.error('Failed to generate PDF. Please try again.')
     } finally {
       setDownloading(false)
     }
