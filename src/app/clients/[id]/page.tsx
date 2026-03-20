@@ -75,7 +75,7 @@ export default async function ClientWorkspacePage({
                   <img src={brandKit.logoUrl} alt="Logo" className={styles.logoThumbnail} />
                 </div>
               )}
-              <Link href={`/clients/${id}/brand-kit`} className={styles.btnBrandKit}>
+              <Link href={`/clients/${id}/brand-studio`} className={styles.btnBrandKit}>
                 Edit Brand Kit →
               </Link>
             </div>

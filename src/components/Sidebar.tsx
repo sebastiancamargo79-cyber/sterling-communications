@@ -5,7 +5,6 @@ import { usePathname, useParams } from 'next/navigation'
 
 const mainNav = [
   { href: '/clients', label: 'Clients' },
-  { href: '/brand-studio', label: 'Brand Studio' },
   { href: '/admin', label: 'Admin' },
 ]
 
@@ -13,6 +12,7 @@ const subNav = (clientId: string) => [
   { href: `/clients/${clientId}/newsletter/editor`, label: 'Editor' },
   { href: `/clients/${clientId}/newsletter/preview`, label: 'Preview' },
   { href: `/clients/${clientId}/newsletter/editions`, label: 'Editions' },
+  { href: `/clients/${clientId}/brand-studio`, label: 'Brand Studio' },
   { href: `/clients/${clientId}/brand-kit`, label: 'Brand Kit' },
 ]
 
@@ -71,9 +71,7 @@ export default function Sidebar() {
         {mainNav.map((item) => {
           const isActive = item.href === '/admin'
             ? pathname.startsWith('/admin')
-            : item.href === '/brand-studio'
-              ? pathname.startsWith('/brand-studio')
-              : pathname.startsWith('/clients')
+            : pathname.startsWith('/clients')
           return (
             <Link key={item.href} href={item.href} style={itemStyle(isActive && pathname.startsWith(item.href))}>
               {item.label}
