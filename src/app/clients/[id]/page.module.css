@@ -3,10 +3,11 @@
   padding: 48px 0;
 }
 
-
 .heading {
-  font-size: 2.25rem;
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text);
+  letter-spacing: -0.02em;
   margin-bottom: 40px;
 }
 
@@ -18,12 +19,13 @@
 
 .card {
   background: var(--card);
-  border: 1px solid var(--borderLight);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 28px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: var(--shadow-sm);
 }
 
 .cardTitle {
@@ -33,6 +35,7 @@
   border-bottom: 1px solid var(--borderLight);
   padding-bottom: 12px;
   margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .cardMeta {
@@ -55,16 +58,19 @@
   background: var(--primary);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2), 0 3px 8px rgba(79, 70, 229, 0.12);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .btnPrimary:hover:not(:disabled) {
   background: var(--primaryHover);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25), 0 6px 12px rgba(79, 70, 229, 0.15);
+  transform: translateY(-1px);
 }
 
 .btnPrimary:disabled {
@@ -78,18 +84,19 @@
   padding: 8px 18px;
   background: transparent;
   color: var(--text);
-  border: 1px solid var(--borderLight);
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .btnSecondary:hover {
-  border-color: var(--primary);
-  background: transparent;
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(79, 70, 229, 0.03);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .btnOutline {
@@ -99,7 +106,7 @@
   background: transparent;
   color: var(--accent);
   border: 1px solid var(--accent);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -123,9 +130,10 @@
   background: transparent;
   color: var(--muted);
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.875rem;
   cursor: pointer;
+  transition: color 0.15s;
 }
 
 .btnCancel:hover {
@@ -142,16 +150,18 @@
 .editionInput {
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.875rem;
   color: var(--text);
   background: var(--bg);
   outline: none;
   min-width: 200px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .editionInput:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .savedBadge {
@@ -169,7 +179,7 @@
 .swatch {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 8px;
   border: 2px solid var(--borderLight);
   flex-shrink: 0;
 }
@@ -201,36 +211,41 @@
 .btnNewEdition {
   display: inline-flex;
   align-items: center;
-  padding: 10px 20px;
+  padding: 9px 20px;
   background: var(--primary);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.25), 0 4px 12px rgba(79, 70, 229, 0.15);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
   white-space: nowrap;
 }
 
 .btnNewEdition:hover {
   background: var(--primaryHover);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3), 0 6px 16px rgba(79, 70, 229, 0.2);
+  transform: translateY(-1px);
 }
 
 .sectionTitle {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
 }
 
 .editionsSection {
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   background: var(--card);
-  border: 1px solid var(--borderLight);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 2rem;
+  padding: 1.75rem 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .editionsList {
@@ -240,23 +255,34 @@
 .editionsTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .editionsTable thead {
-  border-bottom: 2px solid var(--borderLight);
+  border-bottom: 1px solid var(--borderLight);
 }
 
 .editionsTable th {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   text-align: left;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--bg-subtle);
+}
+
+.editionsTable th:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.editionsTable th:last-child {
+  border-radius: 0 8px 8px 0;
 }
 
 .editionsTable td {
-  padding: 1rem;
+  padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--borderLight);
   color: var(--text);
 }
@@ -286,7 +312,7 @@
 .tdDate {
   text-align: center;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .tdActions {
@@ -295,22 +321,22 @@
 
 .btnAction {
   display: inline-block;
-  padding: 0.5rem 0.75rem;
-  margin: 0 0.25rem;
+  padding: 0.4rem 0.7rem;
+  margin: 0 0.2rem;
   background: transparent;
   color: var(--primary);
-  border: 1px solid var(--borderLight);
-  border-radius: 4px;
-  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.78rem;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .btnAction:hover {
-  border-color: var(--border);
-  background: rgba(16, 38, 59, 0.05);
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(79, 70, 229, 0.04);
 }
 
 .btnDanger {
@@ -345,9 +371,10 @@
 
 .brandKitSection {
   background: var(--card);
-  border: 1px solid var(--borderLight);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 2rem;
+  padding: 1.75rem 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .brandKitCard {
@@ -369,20 +396,23 @@
 }
 
 .brandLabel {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .colorSwatch {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
   border: 1px solid var(--borderLight);
+  box-shadow: var(--shadow-sm);
 }
 
 .colorValue {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--muted);
   font-family: monospace;
 }
@@ -395,7 +425,7 @@
 
 .logoThumbnail {
   max-width: 100%;
-  max-height: 100px;
+  max-height: 80px;
   object-fit: contain;
 }
 
@@ -403,19 +433,22 @@
   grid-column: 1 / -1;
   display: inline-flex;
   align-items: center;
-  padding: 10px 20px;
+  padding: 9px 20px;
   background: var(--primary);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2), 0 3px 8px rgba(79, 70, 229, 0.12);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
   width: fit-content;
 }
 
 .btnBrandKit:hover {
   background: var(--primaryHover);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25), 0 6px 12px rgba(79, 70, 229, 0.15);
+  transform: translateY(-1px);
 }

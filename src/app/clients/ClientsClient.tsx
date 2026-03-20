@@ -65,12 +65,12 @@ export default function ClientsClient({ clients }: Props) {
             {clients.map((client) => (
               <div key={client.id} className={styles.cardWrap}>
                 <Link href={`/clients/${client.id}`} className={styles.card}>
-                  {client.brandKit?.primaryColor && (
-                    <div
-                      className={styles.colorSwatch}
-                      style={{ background: client.brandKit.primaryColor }}
-                    />
-                  )}
+                  <div
+                    className={styles.avatar}
+                    style={{ background: client.brandKit?.primaryColor ?? 'var(--primary)' }}
+                  >
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
                   <span className={styles.clientName}>{client.name}</span>
                   <span className={styles.clientMeta}>
                     {client.brandKit ? client.brandKit.mode : 'No brand kit'}
