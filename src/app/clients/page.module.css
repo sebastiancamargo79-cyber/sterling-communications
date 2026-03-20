@@ -3,18 +3,6 @@
   padding: 48px 0;
 }
 
-.back {
-  display: inline-block;
-  font-size: 0.9rem;
-  color: var(--muted);
-  text-decoration: none;
-  margin-bottom: 12px;
-  transition: color 0.15s;
-}
-
-.back:hover {
-  color: var(--text);
-}
 
 .header {
   display: flex;
@@ -80,7 +68,7 @@
 
 .card:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(184, 150, 90, 0.15);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.12);
 }
 
 .colorSwatch {
@@ -93,7 +81,6 @@
 .clientName {
   font-size: 1.05rem;
   font-weight: 600;
-  font-family: var(--font-heading);
 }
 
 .clientMeta {

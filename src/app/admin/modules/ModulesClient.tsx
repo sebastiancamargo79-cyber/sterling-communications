@@ -262,7 +262,6 @@ export default function ModulesClient({ modules }: Props) {
       <Container>
         <div className={styles.header}>
           <div>
-            <a href="/admin" className={styles.back}>← Admin</a>
             <h1 className={styles.heading}>Newsletter Modules</h1>
           </div>
           {!creating && !editingModule && (

@@ -3,28 +3,6 @@
   padding: 48px 0;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--muted);
-  margin-bottom: 20px;
-}
-
-.breadcrumbLink {
-  color: var(--muted);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.breadcrumbLink:hover {
-  color: var(--text);
-}
-
-.breadcrumbSep {
-  color: var(--borderLight);
-}
 
 .heading {
   font-size: 2.25rem;
@@ -52,7 +30,6 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
-  font-family: var(--font-heading);
   border-bottom: 1px solid var(--borderLight);
   padding-bottom: 12px;
   margin-bottom: 4px;
@@ -111,8 +88,8 @@
 }
 
 .btnSecondary:hover {
-  border-color: var(--border);
-  background: rgba(184, 150, 90, 0.06);
+  border-color: var(--primary);
+  background: transparent;
 }
 
 .btnOutline {
@@ -246,7 +223,6 @@
   font-weight: 600;
   color: var(--text);
   margin-bottom: 1.5rem;
-  font-family: var(--font-heading);
 }
 
 .editionsSection {

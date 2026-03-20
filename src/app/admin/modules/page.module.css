@@ -190,7 +190,7 @@
 }
 
 .btnAddField:hover {
-  background: rgba(184, 150, 90, 0.08);
+  background: rgba(79, 70, 229, 0.08);
 }
 
 .error {
@@ -308,7 +308,7 @@
 
 .badgeCustom {
   padding: 3px 10px;
-  background: rgba(184, 150, 90, 0.12);
+  background: rgba(79, 70, 229, 0.1);
   color: var(--accent);
   border-radius: 20px;
   font-size: 0.75rem;

@@ -10,15 +10,6 @@
   gap: 8px;
 }
 
-.back {
-  font-size: 0.875rem;
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.back:hover {
-  color: var(--text);
-}
 
 .heading {
   font-size: 2rem;
@@ -51,7 +42,7 @@
 
 .card:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(184, 150, 90, 0.15);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.12);
 }
 
 .cardIcon {
@@ -61,7 +52,6 @@
 .cardTitle {
   font-size: 1rem;
   font-weight: 600;
-  font-family: var(--font-heading);
 }
 
 .cardDesc {

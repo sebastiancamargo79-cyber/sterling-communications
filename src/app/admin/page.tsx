@@ -7,7 +7,6 @@ export default function AdminPage() {
     <main className={styles.main}>
       <Container>
         <div className={styles.header}>
-          <a href="/" className={styles.back}>← Home</a>
           <h1 className={styles.heading}>Admin Centre</h1>
           <p className={styles.subtitle}>Manage system configuration</p>
         </div>

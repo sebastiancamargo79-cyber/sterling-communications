@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import EditionsClientComponent from './EditionsClient'
+// breadcrumb removed — sidebar provides context
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -30,12 +31,6 @@ export default async function ClientWorkspacePage({
   return (
     <main className={styles.main}>
       <Container>
-        <nav className={styles.breadcrumb}>
-          <Link href="/clients" className={styles.breadcrumbLink}>Clients</Link>
-          <span className={styles.breadcrumbSep}>›</span>
-          <span>{client.name}</span>
-        </nav>
-
         <div className={styles.headerRow}>
           <h1 className={styles.heading}>{client.name}</h1>
           <Link href={`/clients/${id}/newsletter/editor`} className={styles.btnNewEdition}>

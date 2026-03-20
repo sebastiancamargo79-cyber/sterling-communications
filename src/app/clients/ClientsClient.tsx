@@ -45,7 +45,6 @@ export default function ClientsClient({ clients }: Props) {
   return (
     <main className={styles.main}>
       <Container>
-        <a href="/" className={styles.back}>&larr; Home</a>
         <div className={styles.header}>
           <div>
             <h1 className={styles.heading}>Clients</h1>

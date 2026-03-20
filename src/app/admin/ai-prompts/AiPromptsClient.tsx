@@ -63,13 +63,7 @@ export default function AiPromptsClient({ modules }: Props) {
     <main style={{ minHeight: '100vh', padding: '48px 0' }}>
       <Container>
         <div style={{ marginBottom: '40px' }}>
-          <a
-            href="/admin"
-            style={{ fontSize: '0.875rem', color: 'var(--muted)', textDecoration: 'none', display: 'block', marginBottom: '8px' }}
-          >
-            ← Admin
-          </a>
-          <h1 style={{ fontSize: '2rem', color: 'var(--text)', fontFamily: 'var(--font-heading)' }}>
+          <h1 style={{ fontSize: '2rem', color: 'var(--text)' }}>
             AI Prompt Defaults
           </h1>
           <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginTop: '4px' }}>
@@ -107,7 +101,7 @@ export default function AiPromptsClient({ modules }: Props) {
                         <span style={{
                           marginLeft: '0.75rem',
                           padding: '2px 8px',
-                          background: 'rgba(184,150,90,0.12)',
+                          background: 'rgba(79,70,229,0.08)',
                           color: 'var(--accent)',
                           borderRadius: '12px',
                           fontSize: '0.7rem',

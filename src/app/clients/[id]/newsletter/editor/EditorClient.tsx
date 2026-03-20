@@ -127,7 +127,6 @@ function setYamlValue(yaml: string, key: string, newValue: string): string {
   return lines.join('\n')
 }
 
-// Extract YAML array values (e.g. teasers, bullets)
 function extractYamlArray(yaml: string, key: string): string[] {
   const lines = yaml.split('\n')
   const keyLine = lines.findIndex((l) => l.startsWith(key + ':'))
@@ -145,7 +144,6 @@ function extractYamlArray(yaml: string, key: string): string[] {
   return items.length > 0 ? items : ['']
 }
 
-// Serialize array back to YAML
 function setYamlArray(yaml: string, key: string, values: string[]): string {
   const lines = yaml.split('\n')
   const keyLine = lines.findIndex((l) => l.startsWith(key + ':'))
@@ -155,7 +153,6 @@ function setYamlArray(yaml: string, key: string, values: string[]): string {
     return yaml + `\n${key}:\n${arrayYaml}\n`
   }
 
-  // Find end of existing array
   let endLine = keyLine + 1
   while (endLine < lines.length) {
     const line = lines[endLine]
@@ -169,7 +166,6 @@ function setYamlArray(yaml: string, key: string, values: string[]): string {
   return lines.join('\n')
 }
 
-// Parse events from full YAML block
 interface EventItem {
   type: string
   title?: string
@@ -218,7 +214,6 @@ function serializeEventsToYaml(events: EventItem[]): string {
   }).join('\n')
 }
 
-// Prompt edit modal
 function PromptEditModal({
   moduleName,
   moduleLabel,
@@ -314,7 +309,50 @@ function PromptEditModal({
   )
 }
 
-function ModuleCard({
+// Left panel: sortable module list item
+function SortableModuleListItem({
+  block,
+  moduleDefs,
+  isActive,
+  onClick,
+  sortableId,
+}: {
+  block: ModuleBlock
+  moduleDefs: ModuleDef[]
+  isActive: boolean
+  onClick: () => void
+  sortableId: string
+}) {
+  const def = getModuleDef(block.name, moduleDefs)
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: sortableId })
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={sortableStyle}
+      className={`${styles.moduleListItem} ${isActive ? styles.moduleListItemActive : ''}`}
+      onClick={onClick}
+    >
+      <span
+        className={styles.dragHandle}
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+      >
+        ⠿
+      </span>
+      <span style={{ flex: 1 }}>{def?.label ?? block.name}</span>
+      {block.generating && <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>…</span>}
+    </div>
+  )
+}
+
+// Right panel: fields + generate row for a single module
+function ModuleFields({
   block,
   moduleDefs,
   clientId,
@@ -322,7 +360,6 @@ function ModuleCard({
   onBriefChange,
   onGenerate,
   onRemove,
-  sortableId,
 }: {
   block: ModuleBlock
   moduleDefs: ModuleDef[]
@@ -331,107 +368,100 @@ function ModuleCard({
   onBriefChange: (brief: string) => void
   onGenerate: () => void
   onRemove: () => void
-  sortableId: string
 }) {
   const def = getModuleDef(block.name, moduleDefs)
   const [rawMode, setRawMode] = useState(false)
   const [promptOpen, setPromptOpen] = useState(false)
   const isRequired = def?.required ?? false
-  const isOptional = !isRequired
-
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: sortableId })
-  const sortableStyle = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
 
   return (
-    <div className={styles.card} ref={setNodeRef} style={sortableStyle}>
-      <div className={styles.cardHeader} {...attributes} {...listeners}>
+    <div>
+      <div className={styles.fieldsHeader}>
         <div className={styles.cardTitleRow}>
-          <span className={styles.dragHandle}>⠿</span>
           <span className={styles.cardTitle}>{def?.label ?? block.name}</span>
           {isRequired && <span className={styles.badgeRequired}>Required</span>}
-          {isOptional && <span className={styles.badgeOptional}>Optional</span>}
+          {!isRequired && <span className={styles.badgeOptional}>Optional</span>}
         </div>
         <div className={styles.cardActions}>
           <button
             className={styles.btnSmall}
-            onClick={(e) => { e.stopPropagation(); setPromptOpen(true) }}
+            onClick={() => setPromptOpen(true)}
             title="Edit AI prompt"
           >
             Edit prompt
           </button>
-          <button className={styles.btnSmall} onClick={(e) => { e.stopPropagation(); setRawMode((v) => !v) }}>
+          <button className={styles.btnSmall} onClick={() => setRawMode((v) => !v)}>
             {rawMode ? 'Fields' : 'YAML'}
           </button>
           {!isRequired && (
-            <button className={styles.btnDanger} onClick={(e) => { e.stopPropagation(); onRemove() }}>✕</button>
+            <button className={styles.btnDanger} onClick={onRemove}>✕</button>
           )}
         </div>
       </div>
 
-      <div className={styles.cardBody}>
-        {rawMode || !def ? (
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>Raw YAML</label>
-            <textarea
-              className={styles.textarea}
-              value={block.yaml}
-              onChange={(e) => onYamlChange(e.target.value)}
-              rows={10}
-              spellCheck={false}
-            />
-          </div>
-        ) : (
-          def.fields.map((field) => {
-            if (field.type === 'events') {
-              const events = parseEventsFromYaml(block.yaml)
-              return (
-                <EventFieldEditor
-                  key={field.key}
-                  events={events}
-                  onChange={(newEvents) => onYamlChange(serializeEventsToYaml(newEvents))}
-                />
-              )
-            }
-            if (field.type === 'array') {
-              const values = extractYamlArray(block.yaml, field.key)
-              return (
-                <ArrayFieldEditor
-                  key={field.key}
-                  label={field.label}
-                  values={values}
-                  onChange={(newValues) => onYamlChange(setYamlArray(block.yaml, field.key, newValues))}
-                />
-              )
-            }
-            return (
-              <YamlField
-                key={field.key}
-                fieldDef={field}
-                value={extractYamlValue(block.yaml, field.key)}
-                onChange={(val) => onYamlChange(setYamlValue(block.yaml, field.key, val))}
+      <div className={styles.fieldsCard}>
+        <div className={styles.cardBody}>
+          {rawMode || !def ? (
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Raw YAML</label>
+              <textarea
+                className={styles.textarea}
+                value={block.yaml}
+                onChange={(e) => onYamlChange(e.target.value)}
+                rows={10}
+                spellCheck={false}
               />
-            )
-          })
-        )}
+            </div>
+          ) : (
+            def.fields.map((field) => {
+              if (field.type === 'events') {
+                const events = parseEventsFromYaml(block.yaml)
+                return (
+                  <EventFieldEditor
+                    key={field.key}
+                    events={events}
+                    onChange={(newEvents) => onYamlChange(serializeEventsToYaml(newEvents))}
+                  />
+                )
+              }
+              if (field.type === 'array') {
+                const values = extractYamlArray(block.yaml, field.key)
+                return (
+                  <ArrayFieldEditor
+                    key={field.key}
+                    label={field.label}
+                    values={values}
+                    onChange={(newValues) => onYamlChange(setYamlArray(block.yaml, field.key, newValues))}
+                  />
+                )
+              }
+              return (
+                <YamlField
+                  key={field.key}
+                  fieldDef={field}
+                  value={extractYamlValue(block.yaml, field.key)}
+                  onChange={(val) => onYamlChange(setYamlValue(block.yaml, field.key, val))}
+                />
+              )
+            })
+          )}
 
-        <div className={styles.generateRow}>
-          <textarea
-            className={styles.briefTextarea}
-            value={block.brief}
-            onChange={(e) => onBriefChange(e.target.value)}
-            placeholder="Describe what this module should cover — AI will generate content…"
-            rows={2}
-          />
-          <button
-            className={styles.btnGenerate}
-            onClick={onGenerate}
-            disabled={block.generating || !block.brief.trim()}
-          >
-            {block.generating ? <span className={styles.spinner}>Generating…</span> : 'Generate'}
-          </button>
+          <div className={styles.generateRow}>
+            <textarea
+              className={styles.briefTextarea}
+              value={block.brief}
+              onChange={(e) => onBriefChange(e.target.value)}
+              placeholder="Describe what this module should cover — AI will generate content…"
+              rows={2}
+            />
+            <button
+              className={styles.btnGenerate}
+              onClick={onGenerate}
+              disabled={block.generating || !block.brief.trim()}
+            >
+              {block.generating ? <span className={styles.spinner}>Generating…</span> : 'Generate'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -463,6 +493,16 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
   const [editionOpen, setEditionOpen] = useState(false)
   const [editionTitle, setEditionTitle] = useState('')
   const [savingEdition, setSavingEdition] = useState(false)
+  const [selectedModuleName, setSelectedModuleName] = useState<string | null>(null)
+
+  // Keep selectedModuleName valid as blocks change
+  useEffect(() => {
+    if (blocks.length > 0) {
+      if (!selectedModuleName || !blocks.find((b) => b.name === selectedModuleName)) {
+        setSelectedModuleName(blocks[0].name)
+      }
+    }
+  }, [blocks, selectedModuleName])
 
   const existingNames = new Set(blocks.map((b) => b.name))
   const availableToAdd = moduleDefs.map((m) => m.name).filter((n) => !existingNames.has(n))
@@ -477,6 +517,7 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
 
   const addModule = useCallback((name: string) => {
     setBlocks((prev) => [...prev, { name, yaml: '', brief: '', generating: false }])
+    setSelectedModuleName(name)
     setAddingModule(false)
   }, [])
 
@@ -545,7 +586,6 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     }
   }, [blocks, clientId, editionId])
 
-  // Cmd+S / Ctrl+S keyboard shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -586,16 +626,36 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     }
   }
 
+  const selectedIdx = blocks.findIndex((b) => b.name === selectedModuleName)
+  const selectedBlock = selectedIdx >= 0 ? blocks[selectedIdx] : null
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.topBar}>
-        <div className={styles.topBarLeft}>
-          <a href={`/clients/${clientId}`} className={styles.backLink}>← Client</a>
-        </div>
         <div className={styles.topBarCenter}>
           <h1 className={styles.topBarTitle}>Newsletter Editor</h1>
         </div>
         <div className={styles.topBarActions}>
+          {editionOpen ? (
+            <div className={styles.editionInline}>
+              <input
+                className={styles.editionInput}
+                type="text"
+                value={editionTitle}
+                onChange={(e) => setEditionTitle(e.target.value)}
+                placeholder="Edition title…"
+                autoFocus
+              />
+              <button className={styles.btnEdition} onClick={handleSaveEdition} disabled={savingEdition || !editionTitle.trim()}>
+                {savingEdition ? 'Saving…' : 'Save Edition'}
+              </button>
+              <button className={styles.btnCancelSmall} onClick={() => setEditionOpen(false)}>✕</button>
+            </div>
+          ) : (
+            <button className={styles.btnEditionToggle} onClick={() => setEditionOpen(true)}>
+              Save as Edition
+            </button>
+          )}
           <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -608,48 +668,66 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
         </div>
       </div>
 
-      <div className={styles.modules}>
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={blocks.map((b) => b.name)} strategy={verticalListSortingStrategy}>
-            {blocks.map((block, idx) => (
-              <ModuleCard
-                key={`${block.name}-${idx}`}
-                block={block}
-                moduleDefs={moduleDefs}
-                clientId={clientId}
-                onYamlChange={(yaml) => updateBlock(idx, { yaml })}
-                onBriefChange={(brief) => updateBlock(idx, { brief })}
-                onGenerate={() => handleGenerate(idx)}
-                onRemove={() => removeBlock(idx)}
-                sortableId={block.name}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </div>
-
-      <div className={styles.addModuleRow}>
-        {addingModule ? (
-          <div className={styles.addModuleDropdown}>
-            {availableToAdd.length === 0 ? (
-              <span className={styles.noModules}>All modules already added</span>
-            ) : (
-              availableToAdd.map((name) => {
-                const def = getModuleDef(name, moduleDefs)
-                return (
-                  <button key={name} className={styles.addModuleOption} onClick={() => addModule(name)}>
-                    {def?.label ?? name}
-                  </button>
-                )
-              })
-            )}
-            <button className={styles.btnSmall} onClick={() => setAddingModule(false)}>Cancel</button>
+      <div className={styles.editorBody}>
+        {/* Left panel: module list */}
+        <div className={styles.moduleList}>
+          <div className={styles.moduleListScroll}>
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={blocks.map((b) => b.name)} strategy={verticalListSortingStrategy}>
+                {blocks.map((block, idx) => (
+                  <SortableModuleListItem
+                    key={`${block.name}-${idx}`}
+                    block={block}
+                    moduleDefs={moduleDefs}
+                    isActive={block.name === selectedModuleName}
+                    onClick={() => setSelectedModuleName(block.name)}
+                    sortableId={block.name}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
-        ) : (
-          <button className={styles.btnAddModule} onClick={() => setAddingModule(true)}>
-            + Add Module
-          </button>
-        )}
+
+          <div className={styles.moduleListFooter}>
+            {addingModule ? (
+              <div className={styles.addModuleDropdown}>
+                {availableToAdd.length === 0 ? (
+                  <span className={styles.noModules}>All modules added</span>
+                ) : (
+                  availableToAdd.map((name) => {
+                    const def = getModuleDef(name, moduleDefs)
+                    return (
+                      <button key={name} className={styles.addModuleOption} onClick={() => addModule(name)}>
+                        {def?.label ?? name}
+                      </button>
+                    )
+                  })
+                )}
+                <button className={styles.btnSmall} onClick={() => setAddingModule(false)}>Cancel</button>
+              </div>
+            ) : (
+              <button className={styles.btnAddModule} onClick={() => setAddingModule(true)}>
+                + Add Module
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right panel: field editing */}
+        <div className={styles.moduleFields}>
+          {selectedBlock && (
+            <ModuleFields
+              key={selectedModuleName ?? undefined}
+              block={selectedBlock}
+              moduleDefs={moduleDefs}
+              clientId={clientId}
+              onYamlChange={(yaml) => updateBlock(selectedIdx, { yaml })}
+              onBriefChange={(brief) => updateBlock(selectedIdx, { brief })}
+              onGenerate={() => handleGenerate(selectedIdx)}
+              onRemove={() => removeBlock(selectedIdx)}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -34,5 +34,7 @@
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--border);
+  border-color: var(--primary);
+  color: var(--primary);
+  background: transparent;
 }
