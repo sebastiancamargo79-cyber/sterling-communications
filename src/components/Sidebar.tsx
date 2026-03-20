@@ -13,7 +13,6 @@ const subNav = (clientId: string) => [
   { href: `/clients/${clientId}/newsletter/preview`, label: 'Preview' },
   { href: `/clients/${clientId}/newsletter/editions`, label: 'Editions' },
   { href: `/clients/${clientId}/brand-studio`, label: 'Brand Studio' },
-  { href: `/clients/${clientId}/brand-kit`, label: 'Brand Kit' },
 ]
 
 export default function Sidebar() {

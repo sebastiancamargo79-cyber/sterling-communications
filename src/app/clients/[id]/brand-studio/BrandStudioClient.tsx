@@ -85,6 +85,15 @@ export default function BrandStudioClient({
   const [chatLoading, setChatLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
+  const [logoUrl, setLogoUrl] = useState(brandKit?.logoUrl || '')
+  const [fontHeadingUrl, setFontHeadingUrl] = useState(brandKit?.fontHeadingUrl || '')
+  const [fontBodyUrl, setFontBodyUrl] = useState(brandKit?.fontBodyUrl || '')
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingFont, setUploadingFont] = useState<'heading' | 'body' | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const fontHeadingInputRef = useRef<HTMLInputElement>(null)
+  const fontBodyInputRef = useRef<HTMLInputElement>(null)
+
   // Token state
   const [tokens, setTokens] = useState({
     primaryColor: brandKit?.primaryColor ?? '#006938',
@@ -122,6 +131,56 @@ export default function BrandStudioClient({
 
   const handleTokenChange = (key: string, value: string) => {
     setTokens((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch(`/api/clients/${clientId}/brand-kit`, {
+        method: 'PUT',
+        body: formData as any,
+      })
+      if (!res.ok) throw new Error('Logo upload failed')
+      const { logoUrl: newUrl } = await res.json()
+      setLogoUrl(newUrl)
+      setSaveMessage('Logo saved!')
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch {
+      setSaveMessage('Error: Logo upload failed')
+    } finally {
+      setUploadingLogo(false)
+      if (logoInputRef.current) logoInputRef.current.value = ''
+    }
+  }
+
+  const handleFontUpload = async (type: 'heading' | 'body', file: File) => {
+    setUploadingFont(type)
+    try {
+      const formData = new FormData()
+      formData.append('fontType', type)
+      formData.append('file', file)
+      const res = await fetch(`/api/clients/${clientId}/brand-kit/fonts`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error('Font upload failed')
+      const updated = await res.json()
+      if (type === 'heading') {
+        setFontHeadingUrl(updated.fontHeadingUrl || '')
+      } else {
+        setFontBodyUrl(updated.fontBodyUrl || '')
+      }
+      setSaveMessage(`${type === 'heading' ? 'Heading' : 'Body'} font saved!`)
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch {
+      setSaveMessage('Error: Font upload failed')
+    } finally {
+      setUploadingFont(null)
+    }
   }
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -492,6 +551,77 @@ export default function BrandStudioClient({
                   <option value="normal">Normal</option>
                   <option value="airy">Airy</option>
                 </select>
+              </div>
+            </div>
+
+            <div className={styles.tokenGroup}>
+              <h3 className={styles.tokenGroupTitle}>Assets</h3>
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '6px' }}>Logo</div>
+                {logoUrl && (
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    style={{ maxHeight: '48px', maxWidth: '120px', display: 'block', marginBottom: '8px', borderRadius: '4px', border: '1px solid var(--borderLight)' }}
+                  />
+                )}
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleLogoUpload}
+                />
+                <button
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  style={{ fontSize: '0.8rem', padding: '5px 12px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '4px', background: 'transparent', color: 'var(--text)' }}
+                >
+                  {uploadingLogo ? 'Uploading...' : logoUrl ? 'Replace Logo' : 'Upload Logo'}
+                </button>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '6px' }}>Font Files</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text)', minWidth: '56px' }}>Heading:</span>
+                  <span style={{ fontSize: '0.75rem', color: fontHeadingUrl ? 'var(--text)' : '#999', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {fontHeadingUrl ? fontHeadingUrl.split('/').pop() : 'None'}
+                  </span>
+                  <input
+                    ref={fontHeadingInputRef}
+                    type="file"
+                    accept=".woff2,.woff,.ttf,.otf"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFontUpload('heading', f) }}
+                  />
+                  <button
+                    onClick={() => fontHeadingInputRef.current?.click()}
+                    disabled={uploadingFont === 'heading'}
+                    style={{ fontSize: '0.75rem', padding: '3px 8px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '4px', background: 'transparent', color: 'var(--text)', whiteSpace: 'nowrap' }}
+                  >
+                    {uploadingFont === 'heading' ? '...' : 'Upload'}
+                  </button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text)', minWidth: '56px' }}>Body:</span>
+                  <span style={{ fontSize: '0.75rem', color: fontBodyUrl ? 'var(--text)' : '#999', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {fontBodyUrl ? fontBodyUrl.split('/').pop() : 'None'}
+                  </span>
+                  <input
+                    ref={fontBodyInputRef}
+                    type="file"
+                    accept=".woff2,.woff,.ttf,.otf"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFontUpload('body', f) }}
+                  />
+                  <button
+                    onClick={() => fontBodyInputRef.current?.click()}
+                    disabled={uploadingFont === 'body'}
+                    style={{ fontSize: '0.75rem', padding: '3px 8px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '4px', background: 'transparent', color: 'var(--text)', whiteSpace: 'nowrap' }}
+                  >
+                    {uploadingFont === 'body' ? '...' : 'Upload'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
