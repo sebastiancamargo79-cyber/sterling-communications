@@ -21,6 +21,7 @@ export default async function ClientEditorPage({
   let clientName = ''
   let finalEditionId = editionId
 
+  // Load client name independently
   try {
     const [clientRow] = await db
       .select()
@@ -28,17 +29,15 @@ export default async function ClientEditorPage({
       .where(eq(clients.id, id))
       .limit(1)
     if (clientRow) clientName = clientRow.name
+  } catch {
+    // non-critical
+  }
 
-    // If editionId provided, load that edition
-    if (editionId) {
-      const edition = await db.query.newsletterEditions.findFirst({
-        where: eq(newsletterEditions.id, editionId),
-      })
-      if (edition) {
-        rawContent = edition.rawContent
-      }
-    } else {
-      // No editionId: create a blank edition and redirect to it
+  if (!editionId) {
+    // Create a blank edition — redirect must happen OUTSIDE try/catch so Next.js
+    // can propagate the NEXT_REDIRECT and not swallow it
+    let newEditionId: string | undefined
+    try {
       const [newEdition] = await db
         .insert(newsletterEditions)
         .values({
@@ -48,11 +47,28 @@ export default async function ClientEditorPage({
           updatedAt: new Date(),
         })
         .returning()
-
-      redirect(`/clients/${id}/newsletter/editor?editionId=${newEdition.id}`)
+      newEditionId = newEdition.id
+    } catch {
+      // DB error creating edition — fall through to draft fallback below
     }
-  } catch {
-    // DB unavailable - fallback to draft mode
+
+    if (newEditionId) {
+      redirect(`/clients/${id}/newsletter/editor?editionId=${newEditionId}`)
+    }
+  }
+
+  // Load edition or draft content
+  if (finalEditionId) {
+    try {
+      const edition = await db.query.newsletterEditions.findFirst({
+        where: eq(newsletterEditions.id, finalEditionId),
+      })
+      if (edition) rawContent = edition.rawContent
+    } catch {
+      // fallback to empty
+    }
+  } else {
+    // No edition — fallback to draft
     try {
       const [row] = await db
         .select()
@@ -65,7 +81,7 @@ export default async function ClientEditorPage({
         rawContent = generateTemplate(clientName)
       }
     } catch {
-      // Last resort
+      // last resort
     }
   }
 
@@ -75,6 +91,7 @@ export default async function ClientEditorPage({
     <EditorClient
       initialContent={rawContent}
       clientId={id}
+      clientName={clientName}
       editionId={finalEditionId}
       moduleDefs={moduleDefs}
     />

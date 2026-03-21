@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+
 import { type ModuleDef } from '@/lib/module-registry'
 import { extractModuleBlocks, serializeModuleArray } from '@/lib/module-parser'
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
@@ -22,6 +23,7 @@ interface ModuleBlock {
 interface Props {
   initialContent: string
   clientId: string
+  clientName: string
   editionId?: string
   moduleDefs: ModuleDef[]
 }
@@ -482,7 +484,8 @@ function ModuleFields({
   )
 }
 
-export default function EditorClient({ initialContent, clientId, editionId, moduleDefs }: Props) {
+export default function EditorClient({ initialContent, clientId, clientName, editionId, moduleDefs }: Props) {
+  const router = useRouter()
   const [blocks, setBlocks] = useState<ModuleBlock[]>(() => {
     const parsed = extractModuleBlocks(initialContent)
       .map((b) => ({ ...b, brief: '', generating: false }))
@@ -638,6 +641,34 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current) }
   }, [blocks, clientId, editionId])
 
+  const previewHref = editionId
+    ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}`
+    : `/clients/${clientId}/newsletter/preview`
+
+  const handlePreview = useCallback(async () => {
+    // Flush any pending auto-save before navigating to preview
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
+    }
+    try {
+      const rawContent = serializeModuleArray(blocks)
+      const endpoint = editionId
+        ? `/api/clients/${clientId}/newsletter/editions/${editionId}`
+        : `/api/clients/${clientId}/newsletter`
+      await fetch(endpoint, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rawContent }),
+      })
+      setSaveStatus('saved')
+      setLastSaved(new Date())
+    } catch {
+      // Non-fatal — navigate anyway
+    }
+    router.push(previewHref)
+  }, [blocks, clientId, editionId, previewHref, router])
+
   const handleSaveEdition = async () => {
     if (!editionTitle.trim()) return
     setSavingEdition(true)
@@ -673,7 +704,8 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
   return (
     <div className={styles.wrapper}>
       <div className={styles.topBar}>
-        <div className={styles.topBarCenter}>
+        <div className={styles.topBarLeft}>
+          <a href={`/clients/${clientId}`} className={styles.backLink}>← {clientName || 'Back'}</a>
           <h1 className={styles.topBarTitle}>Newsletter Editor</h1>
         </div>
         <div className={styles.topBarActions}>
@@ -705,12 +737,9 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
               Publish Edition
             </button>
           )}
-          <Link
-            href={editionId ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}` : `/clients/${clientId}/newsletter/preview`}
-            className={styles.btnPreview}
-          >
+          <button className={styles.btnPreview} onClick={handlePreview}>
             Preview
-          </Link>
+          </button>
         </div>
       </div>
 
