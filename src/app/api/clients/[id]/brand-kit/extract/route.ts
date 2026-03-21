@@ -52,7 +52,7 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
       throw new Error('pdf-parse module not loaded correctly')
     }
 
-    const pdfData = await pdfParse(pdfBuffer)
+    const pdfData = await pdfParse(pdfBuffer) as { text?: string }
 
     if (!pdfData || typeof pdfData.text !== 'string') {
       throw new Error('pdf-parse returned no data')
