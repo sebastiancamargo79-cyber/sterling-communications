@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { type ModuleDef } from '@/lib/module-registry'
@@ -383,13 +383,15 @@ function ModuleFields({
           {!isRequired && <span className={styles.badgeOptional}>Optional</span>}
         </div>
         <div className={styles.cardActions}>
-          <button
-            className={styles.btnSmall}
-            onClick={() => setPromptOpen(true)}
-            title="Edit AI prompt"
-          >
-            Edit prompt
-          </button>
+          {def?.aiPromptTemplate && (
+            <button
+              className={styles.btnSmall}
+              onClick={() => setPromptOpen(true)}
+              title="Edit AI prompt"
+            >
+              Edit prompt
+            </button>
+          )}
           <button className={styles.btnSmall} onClick={() => setRawMode((v) => !v)}>
             {rawMode ? 'Fields' : 'YAML'}
           </button>
@@ -446,22 +448,24 @@ function ModuleFields({
             })
           )}
 
-          <div className={styles.generateRow}>
-            <textarea
-              className={styles.briefTextarea}
-              value={block.brief}
-              onChange={(e) => onBriefChange(e.target.value)}
-              placeholder="Describe what this module should cover — AI will generate content…"
-              rows={2}
-            />
-            <button
-              className={styles.btnGenerate}
-              onClick={onGenerate}
-              disabled={block.generating || !block.brief.trim()}
-            >
-              {block.generating ? <span className={styles.spinner}>Generating…</span> : 'Generate'}
-            </button>
-          </div>
+          {def?.aiPromptTemplate && (
+            <div className={styles.generateRow}>
+              <textarea
+                className={styles.briefTextarea}
+                value={block.brief}
+                onChange={(e) => onBriefChange(e.target.value)}
+                placeholder="Describe what this module should cover — AI will generate content…"
+                rows={2}
+              />
+              <button
+                className={styles.btnGenerate}
+                onClick={onGenerate}
+                disabled={block.generating || !block.brief.trim()}
+              >
+                {block.generating ? <span className={styles.spinner}>Generating…</span> : 'Generate'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -489,6 +493,9 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     return [...requiredMissing, ...parsed]
   })
   const [saving, setSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [addingModule, setAddingModule] = useState(false)
   const [editionOpen, setEditionOpen] = useState(false)
   const [editionTitle, setEditionTitle] = useState('')
@@ -597,6 +604,18 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     return () => window.removeEventListener('keydown', handler)
   }, [handleSave])
 
+  // Debounced auto-save
+  useEffect(() => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    setSaveStatus('saving')
+    saveTimeoutRef.current = setTimeout(async () => {
+      await handleSave()
+      setSaveStatus('saved')
+      setLastSaved(new Date())
+    }, 2000)
+    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current) }
+  }, [blocks]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSaveEdition = async () => {
     if (!editionTitle.trim()) return
     setSavingEdition(true)
@@ -636,6 +655,14 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
           <h1 className={styles.topBarTitle}>Newsletter Editor</h1>
         </div>
         <div className={styles.topBarActions}>
+          {saveStatus === 'saving' && (
+            <span className={styles.saveStatus}>Saving…</span>
+          )}
+          {saveStatus === 'saved' && lastSaved && (
+            <span className={styles.saveStatus}>
+              ✓ Saved at {lastSaved.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+            </span>
+          )}
           {editionOpen ? (
             <div className={styles.editionInline}>
               <input
@@ -647,18 +674,15 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
                 autoFocus
               />
               <button className={styles.btnEdition} onClick={handleSaveEdition} disabled={savingEdition || !editionTitle.trim()}>
-                {savingEdition ? 'Saving…' : 'Save Edition'}
+                {savingEdition ? 'Saving…' : 'Publish Edition'}
               </button>
               <button className={styles.btnCancelSmall} onClick={() => setEditionOpen(false)}>✕</button>
             </div>
           ) : (
             <button className={styles.btnEditionToggle} onClick={() => setEditionOpen(true)}>
-              Save as Edition
+              Publish Edition
             </button>
           )}
-          <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
-          </button>
           <Link
             href={editionId ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}` : `/clients/${clientId}/newsletter/preview`}
             className={styles.btnPreview}

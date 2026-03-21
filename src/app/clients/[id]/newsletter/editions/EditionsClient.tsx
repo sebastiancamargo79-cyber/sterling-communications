@@ -94,12 +94,18 @@ export default function EditionsClient({ clientId, clientName, editions }: Props
                       >
                         View
                       </button>
+                      <a
+                        className={styles.btnEdit}
+                        href={`/clients/${clientId}/newsletter/editor?editionId=${edition.id}`}
+                      >
+                        Edit
+                      </a>
                       <button
                         className={styles.btnRestore}
                         onClick={() => handleRestore(edition)}
                         disabled={restoring === edition.id}
                       >
-                        {restoring === edition.id ? 'Restoring…' : 'Restore'}
+                        {restoring === edition.id ? 'Restoring…' : 'Use as Draft'}
                       </button>
                     </>
                   )}

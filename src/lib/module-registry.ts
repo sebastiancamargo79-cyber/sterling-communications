@@ -19,7 +19,7 @@ export interface ModuleDef {
 export const MODULE_REGISTRY: ModuleDef[] = [
   {
     name: 'Meta',
-    label: 'Metadata',
+    label: 'Information',
     storageKey: 'meta',
     fields: [
       { key: 'month', label: 'Month', type: 'text', placeholder: 'March 2025' },
@@ -28,13 +28,7 @@ export const MODULE_REGISTRY: ModuleDef[] = [
       { key: 'website', label: 'Website', type: 'text' },
       { key: 'email', label: 'Email', type: 'text' },
     ],
-    aiPromptTemplate: `Generate the metadata section for a home care franchise newsletter.
-Output only valid YAML with these fields:
-month: "Month Year"
-office_name: "[Office Name]"
-phone: "phone number"
-website: "website url"
-email: "email address"`,
+    aiPromptTemplate: '',
     required: true,
   },
   {

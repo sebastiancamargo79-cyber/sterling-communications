@@ -94,6 +94,24 @@
   border-color: var(--border);
 }
 
+.btnEdit {
+  padding: 7px 16px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btnEdit:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .btnRestore {
   padding: 7px 16px;
   background: var(--primary);
