@@ -54,24 +54,17 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
 
     const pdfData = await pdfParse(pdfBuffer)
 
-    // Validate PDF data structure
-    if (!pdfData) {
+    if (!pdfData || typeof pdfData.text !== 'string') {
       throw new Error('pdf-parse returned no data')
     }
 
-    if (!Array.isArray(pdfData.pages)) {
-      throw new Error(`Invalid PDF data structure: pages is ${typeof pdfData.pages}`)
-    }
-
-    // Get text from first 3 pages max
-    const pages = pdfData.pages.slice(0, 3)
-    const textChunks = pages.map((page) => page.text).filter(Boolean)
-
-    if (textChunks.length === 0) {
+    const text = pdfData.text.trim()
+    if (!text) {
       throw new Error('No text extracted from PDF')
     }
 
-    return textChunks.join('\n\n')
+    // Limit to ~4000 chars to avoid huge prompts
+    return text.slice(0, 4000)
   } catch (e) {
     throw new Error(`Failed to parse PDF: ${e instanceof Error ? e.message : String(e)}`)
   }
