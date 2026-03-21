@@ -496,6 +496,7 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isInitialMount = useRef(true)
   const [addingModule, setAddingModule] = useState(false)
   const [editionOpen, setEditionOpen] = useState(false)
   const [editionTitle, setEditionTitle] = useState('')
@@ -604,17 +605,38 @@ export default function EditorClient({ initialContent, clientId, editionId, modu
     return () => window.removeEventListener('keydown', handler)
   }, [handleSave])
 
-  // Debounced auto-save
+  // Debounced auto-save (skip initial mount)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     setSaveStatus('saving')
+    const snapshot = blocks
+    const eid = editionId
+    const cid = clientId
     saveTimeoutRef.current = setTimeout(async () => {
-      await handleSave()
-      setSaveStatus('saved')
-      setLastSaved(new Date())
+      try {
+        const rawContent = serializeModuleArray(snapshot)
+        const endpoint = eid
+          ? `/api/clients/${cid}/newsletter/editions/${eid}`
+          : `/api/clients/${cid}/newsletter`
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rawContent }),
+        })
+        if (!res.ok) throw new Error('Save failed')
+        setSaveStatus('saved')
+        setLastSaved(new Date())
+      } catch {
+        setSaveStatus('idle')
+        toast.error('Auto-save failed')
+      }
     }, 2000)
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current) }
-  }, [blocks]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [blocks, clientId, editionId])
 
   const handleSaveEdition = async () => {
     if (!editionTitle.trim()) return
