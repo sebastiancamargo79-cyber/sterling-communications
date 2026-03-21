@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import type { Newsletter } from '@/lib/newsletter-schema'
 import NewsletterFooter from './NewsletterFooter'
+import ImgOrPlaceholder from './ImgOrPlaceholder'
 import sharedStyles from './shared.module.css'
 import styles from './Page4ClientStory.module.css'
 
@@ -16,7 +17,7 @@ export default function Page4ClientStory({ data, meta }: Props) {
       <hr className={sharedStyles.rule} />
 
       <div className={styles.imageStrip}>
-        <img className={styles.image} src={data.image_url} alt={data.headline} />
+        <ImgOrPlaceholder className={styles.image} src={data.image_url} alt={data.headline} />
       </div>
 
       <hr className={sharedStyles.rule} />

@@ -210,7 +210,11 @@ export default async function ClientNewsletterPreview({
       <BrokenImageHandler />
       <div className={styles.wrapper} style={styleVars}>
         <div className={styles.printBar}>
-          <a href={`/clients/${id}`} className={styles.backLink}>&larr; Back to Client</a>
+          {editionId ? (
+            <a href={`/clients/${id}/newsletter/editor?editionId=${editionId}`} className={styles.backLink}>&larr; Back to Editor</a>
+          ) : (
+            <a href={`/clients/${id}`} className={styles.backLink}>&larr; Back to Client</a>
+          )}
           <span className={styles.printBarTitle}>
             {data.meta.office_name} — {data.meta.month} Newsletter
           </span>

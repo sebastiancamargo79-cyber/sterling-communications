@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import type { Newsletter } from '@/lib/newsletter-schema'
 import NewsletterFooter from './NewsletterFooter'
+import ImgOrPlaceholder from './ImgOrPlaceholder'
 import sharedStyles from './shared.module.css'
 import styles from './Page5Spotlight.module.css'
 
@@ -18,7 +19,7 @@ export default function Page5Spotlight({ data, meta, employerName = 'Home Care' 
 
       <div className={styles.profile}>
         <div className={styles.portraitWrap}>
-          <img className={styles.portrait} src={data.image_url} alt={data.name} />
+          <ImgOrPlaceholder className={styles.portrait} src={data.image_url} alt={data.name} />
         </div>
         <div className={styles.info}>
           <h2 className={styles.name}>{data.name}</h2>

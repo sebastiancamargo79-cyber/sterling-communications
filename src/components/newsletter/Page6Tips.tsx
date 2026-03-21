@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import type { Newsletter } from '@/lib/newsletter-schema'
 import NewsletterFooter from './NewsletterFooter'
+import ImgOrPlaceholder from './ImgOrPlaceholder'
 import sharedStyles from './shared.module.css'
 import styles from './Page6Tips.module.css'
 
@@ -20,7 +21,7 @@ export default function Page6Tips({ tips, community, meta }: Props) {
       {tips && (
         <div className={styles.tipsRow}>
           <div className={styles.tipsImageWrap}>
-            <img className={styles.tipsImage} src={tips.image_url} alt="Tips" />
+            <ImgOrPlaceholder className={styles.tipsImage} src={tips.image_url} alt="Tips" />
           </div>
           <ul className={styles.bulletList}>
             {tips.bullets.map((bullet, i) => (

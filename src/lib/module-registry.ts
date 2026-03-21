@@ -41,7 +41,7 @@ export const MODULE_REGISTRY: ModuleDef[] = [
     ],
     aiPromptTemplate: `Generate the cover section for a home care franchise newsletter.
 Output only valid YAML with these fields:
-hero_image_url: "https://picsum.photos/seed/homecare/800/533"
+hero_image_url: ""
 teasers:
   - "Teaser line 1"
   - "Teaser line 2"
@@ -89,7 +89,7 @@ Event format:
 
 Photo format:
 - type: photo
-  image_url: "https://picsum.photos/seed/somekey/400/300"
+  image_url: ""
   caption: "Caption text"
 
 Mix event and photo items.`,
@@ -106,7 +106,7 @@ Mix event and photo items.`,
     aiPromptTemplate: `Write the Client Story section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 headline: "[Compelling headline, e.g. 'A Life Well Lived: [Name]'s Story']"
-image_url: "https://picsum.photos/seed/[name]/800/450"
+image_url: ""
 body_md: |
   [4-5 paragraphs telling the client's story with warmth and dignity. Use markdown.]`,
   },
@@ -124,7 +124,7 @@ body_md: |
     ],
     aiPromptTemplate: `Write the Staff Spotlight section for a home care franchise newsletter.
 Output only valid YAML with these fields:
-image_url: "https://picsum.photos/seed/[name]/400/400"
+image_url: ""
 name: "[Full name]"
 role: "[Job title]"
 years: [integer]
@@ -142,7 +142,7 @@ bio_md: |
     ],
     aiPromptTemplate: `Write the Wellbeing Tips section for a home care franchise newsletter.
 Output only valid YAML with these fields:
-image_url: "https://picsum.photos/seed/[season]/400/400"
+image_url: ""
 bullets:
   - "[Tip 1]"
   - "[Tip 2]"

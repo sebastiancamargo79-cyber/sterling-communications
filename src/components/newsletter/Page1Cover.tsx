@@ -1,5 +1,6 @@
 import type { Newsletter } from '@/lib/newsletter-schema'
 import NewsletterFooter from './NewsletterFooter'
+import ImgOrPlaceholder from './ImgOrPlaceholder'
 import sharedStyles from './shared.module.css'
 import styles from './Page1Cover.module.css'
 
@@ -29,7 +30,7 @@ export default function Page1Cover({ data, meta, logoUrl }: Props) {
       <hr className={sharedStyles.rule} />
 
       <div className={styles.heroWrap}>
-        <img
+        <ImgOrPlaceholder
           className={styles.hero}
           src={data.hero_image_url}
           alt="Newsletter cover"
