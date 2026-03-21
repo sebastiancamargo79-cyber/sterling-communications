@@ -128,21 +128,46 @@ export default function BrandStudioClient({
     const file = e.target.files?.[0]
     if (!file) return
 
+    setExtracting(true)
     try {
       const formData = new FormData()
       formData.append('file', file)
 
-      const res = await fetch(`/api/upload`, {
+      const uploadRes = await fetch(`/api/upload`, {
         method: 'POST',
         body: formData,
       })
 
-      if (res.ok) {
-        const data = await res.json()
-        setPdfUrl(data.url)
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}))
+        alert(`Upload failed: ${err.error ?? uploadRes.statusText}`)
+        setExtracting(false)
+        return
       }
+
+      const { url } = await uploadRes.json()
+      setPdfUrl(url)
+
+      // Auto-extract immediately after upload
+      const extractRes = await fetch(`/api/clients/${clientId}/brand-kit/extract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfUrl: url }),
+      })
+
+      if (!extractRes.ok) {
+        const error = await extractRes.json().catch(() => ({}))
+        alert(`Extraction failed: ${error.error ?? extractRes.statusText}`)
+        setExtracting(false)
+        return
+      }
+
+      const data: ExtractionResponse = await extractRes.json()
+      await handleExtractData(data)
     } catch (err) {
-      alert('Failed to upload PDF')
+      alert('Error: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setExtracting(false)
     }
   }
 
@@ -164,7 +189,15 @@ export default function BrandStudioClient({
       }
 
       const data: ExtractionResponse = await res.json()
+      await handleExtractData(data)
+    } catch (err) {
+      alert('Extraction error: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setExtracting(false)
+    }
+  }
 
+  const handleExtractData = async (data: ExtractionResponse) => {
       // Build review list
       const reviews: ExtractionReview[] = [
         {
@@ -246,12 +279,12 @@ export default function BrandStudioClient({
         },
       ].filter((r) => r.newValue) // Only show tokens with extracted values
 
+      if (reviews.length === 0) {
+        alert('No brand tokens could be extracted from this PDF. It may be image-based or lack explicit color/font information.')
+        return
+      }
+
       setExtractionReview(reviews)
-    } catch (err) {
-      alert('Extraction error: ' + (err instanceof Error ? err.message : String(err)))
-    } finally {
-      setExtracting(false)
-    }
   }
 
   const applySelectedExtraction = () => {
@@ -535,19 +568,11 @@ export default function BrandStudioClient({
                     onChange={handlePdfUpload}
                     id="pdfInput"
                     style={{ display: 'none' }}
+                    disabled={extracting}
                   />
-                  <label htmlFor="pdfInput" className={styles.uploadLabel}>
-                    Click to upload or drag PDF here
+                  <label htmlFor="pdfInput" className={styles.uploadLabel} style={extracting ? { opacity: 0.6, pointerEvents: 'none' } : {}}>
+                    {extracting ? 'Extracting brand tokens…' : pdfUrl ? 'PDF uploaded — re-upload to extract again' : 'Click to upload brand guidelines PDF'}
                   </label>
-                  {pdfUrl && (
-                    <button
-                      onClick={handleExtract}
-                      disabled={extracting}
-                      className={styles.extractButton}
-                    >
-                      {extracting ? 'Extracting...' : 'Extract Brand Tokens ▶'}
-                    </button>
-                  )}
                 </div>
               ) : (
                 <div className={styles.reviewSection}>
