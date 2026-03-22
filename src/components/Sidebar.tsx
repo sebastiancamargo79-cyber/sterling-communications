@@ -35,7 +35,10 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
         <div className={styles.brandMark}>SC</div>
-        <span className={styles.brandName}>Sterling</span>
+        <div className={styles.brandText}>
+          <span className={styles.brandName}>Sterling Communications</span>
+          <span className={styles.brandTagline}>Newsletter Platform</span>
+        </div>
       </div>
 
       <nav className={styles.nav}>

@@ -6,6 +6,7 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
+        <div className={styles.logoMark}>SC</div>
         <p className={styles.logo}>Sterling Communications</p>
         <p className={styles.subtitle}>Enter your password to continue</p>
         <Suspense>

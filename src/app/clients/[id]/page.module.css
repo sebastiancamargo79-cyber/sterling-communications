@@ -95,8 +95,8 @@
 
 .btnSecondary:hover {
   border-color: rgba(99, 102, 241, 0.4);
-  background: rgba(79, 70, 229, 0.03);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  background: rgba(99, 102, 241, 0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .btnOutline {
@@ -340,13 +340,13 @@
 }
 
 .btnDanger {
-  color: #d32f2f;
-  border-color: #ffebee;
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .btnDanger:hover {
-  background: rgba(211, 47, 47, 0.05);
-  border-color: #d32f2f;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
 .emptyState {

@@ -5,32 +5,40 @@
 }
 
 .label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 
 .input {
-  padding: 10px 12px;
+  padding: 10px 13px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.9375rem;
   color: var(--text);
-  background: var(--card);
+  background: var(--bg);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
 }
 
 .input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
 }
 
 .inputError {
-  border-color: #dc2626;
+  border-color: #EF4444;
 }
 
 .error {
   font-size: 0.8125rem;
-  color: #dc2626;
+  color: #F87171;
 }

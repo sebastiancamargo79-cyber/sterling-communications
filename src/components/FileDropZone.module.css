@@ -23,11 +23,11 @@
 .dropZone:hover,
 .dragging {
   border-color: var(--primary);
-  background: #f4f3f0;
+  background: rgba(99, 102, 241, 0.05);
 }
 
 .dropZoneError {
-  border-color: #dc2626;
+  border-color: #EF4444;
 }
 
 .hiddenInput {
@@ -52,5 +52,5 @@
 
 .error {
   font-size: 0.8125rem;
-  color: #dc2626;
+  color: #F87171;
 }

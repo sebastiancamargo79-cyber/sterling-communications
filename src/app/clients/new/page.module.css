@@ -70,7 +70,7 @@
 
 .radioLabelActive {
   border-color: var(--primary);
-  background: rgba(26, 26, 26, 0.03);
+  background: rgba(99, 102, 241, 0.08);
 }
 
 .radioInput {
@@ -123,11 +123,11 @@
 
 .error {
   font-size: 0.875rem;
-  color: #dc2626;
+  color: #F87171;
   padding: 10px 14px;
-  background: #fef2f2;
+  background: rgba(239, 68, 68, 0.08);
   border-radius: var(--radius);
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .actions {
