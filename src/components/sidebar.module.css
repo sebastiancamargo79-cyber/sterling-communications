@@ -121,6 +121,19 @@
   padding: 6px 10px 10px;
 }
 
+.clientContextLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 10px;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.12s;
+}
+.clientContextLink:hover {
+  background: var(--sidebar-hover-bg);
+}
+
 .clientContextAvatar {
   width: 20px;
   height: 20px;

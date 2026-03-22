@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useParams } from 'next/navigation'
 import {
   LayoutDashboard, Users, Settings, ChevronLeft,
-  FileEdit, Eye, BookOpen, Palette, Sun, Moon
+  BookOpen, Palette, Sun, Moon
 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 import styles from './sidebar.module.css'
@@ -19,8 +19,6 @@ const mainNav = [
 ]
 
 const subNav = (clientId: string) => [
-  { href: `/clients/${clientId}/newsletter/editor`, label: 'Editor', icon: FileEdit },
-  { href: `/clients/${clientId}/newsletter/preview`, label: 'Preview', icon: Eye },
   { href: `/clients/${clientId}/newsletter/editions`, label: 'Editions', icon: BookOpen },
   { href: `/clients/${clientId}/brand-studio`, label: 'Brand Studio', icon: Palette },
 ]
@@ -92,7 +90,7 @@ export default function Sidebar() {
               All Clients
             </Link>
             {clientInfo && (
-              <div className={styles.clientContext}>
+              <Link href={`/clients/${clientId}`} className={styles.clientContextLink}>
                 <div
                   className={styles.clientContextAvatar}
                   style={{ background: clientInfo.primaryColor ?? 'var(--primary)' }}
@@ -100,7 +98,7 @@ export default function Sidebar() {
                   {clientInfo.name.charAt(0).toUpperCase()}
                 </div>
                 <span className={styles.clientContextName}>{clientInfo.name}</span>
-              </div>
+              </Link>
             )}
             {subNav(clientId).map((item) => {
               const Icon = item.icon

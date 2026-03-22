@@ -21,6 +21,46 @@ interface ModuleBlock {
   generating: boolean
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+interface ChatOperation {
+  type: 'update_module' | 'add_module' | 'remove_module' | 'reorder_modules'
+  name?: string
+  yaml?: string
+  after?: string
+  order?: string[]
+}
+
+interface AssistantMessage extends ChatMessage {
+  role: 'assistant'
+  operations?: ChatOperation[]
+}
+
+function applyOperations(blocks: ModuleBlock[], ops: ChatOperation[], moduleDefs: ModuleDef[]): ModuleBlock[] {
+  const REQUIRED = new Set(moduleDefs.filter((d) => d.required).map((d) => d.name))
+  let result = [...blocks]
+  for (const op of ops) {
+    if (op.type === 'update_module' && op.name) {
+      result = result.map((b) => b.name === op.name ? { ...b, yaml: op.yaml ?? b.yaml } : b)
+    } else if (op.type === 'add_module' && op.name) {
+      if (!result.find((b) => b.name === op.name)) {
+        const nb: ModuleBlock = { name: op.name, yaml: op.yaml ?? '', brief: '', generating: false }
+        const afterIdx = op.after ? result.findIndex((b) => b.name === op.after) : -1
+        result.splice(afterIdx + 1, 0, nb)
+      }
+    } else if (op.type === 'remove_module' && op.name) {
+      if (!REQUIRED.has(op.name)) result = result.filter((b) => b.name !== op.name)
+    } else if (op.type === 'reorder_modules' && op.order) {
+      const byName = Object.fromEntries(result.map((b) => [b.name, b]))
+      result = op.order.flatMap((n) => byName[n] ? [byName[n]] : [])
+    }
+  }
+  return result
+}
+
 interface Props {
   initialContent: string
   initialTokenOverrides: Record<string, string>
@@ -523,6 +563,11 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
   const [newEditionTitle, setNewEditionTitle] = useState('')
   const [savingEdition, setSavingEdition] = useState(false)
   const [selectedModuleName, setSelectedModuleName] = useState<string | null>(null)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState<(ChatMessage | AssistantMessage)[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement | null>(null)
 
   const saveTitle = useCallback(async (newTitle: string) => {
     if (!editionId || !newTitle.trim()) return
@@ -744,6 +789,42 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
     }
   }
 
+  const handleChatSend = useCallback(async () => {
+    const text = chatInput.trim()
+    if (!text || chatLoading) return
+    const userMsg: ChatMessage = { role: 'user', content: text }
+    const history = [...chatMessages, userMsg]
+    setChatMessages(history)
+    setChatInput('')
+    setChatLoading(true)
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    try {
+      const rawContent = serializeModuleArray(blocks)
+      const existingNames = new Set(blocks.map((b) => b.name))
+      const availableModules = moduleDefs.map((m) => m.name).filter((n) => !existingNames.has(n))
+      const res = await fetch('/api/newsletter/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+          rawContent,
+          clientId,
+          availableModules,
+          currentModuleOrder: blocks.map((b) => b.name),
+        }),
+      })
+      if (!res.ok) throw new Error('Chat request failed')
+      const { reply, operations } = await res.json() as { reply: string; operations: ChatOperation[] }
+      const assistantMsg: AssistantMessage = { role: 'assistant', content: reply, operations }
+      setChatMessages((prev) => [...prev, assistantMsg])
+    } catch {
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
+    } finally {
+      setChatLoading(false)
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
+  }, [chatInput, chatLoading, chatMessages, blocks, clientId, moduleDefs])
+
   const selectedIdx = blocks.findIndex((b) => b.name === selectedModuleName)
   const selectedBlock = selectedIdx >= 0 ? blocks[selectedIdx] : null
 
@@ -793,6 +874,12 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
               Publish Edition
             </button>
           )}
+          <button
+            className={`${styles.btnChat} ${chatOpen ? styles.btnChatActive : ''}`}
+            onClick={() => setChatOpen((o) => !o)}
+          >
+            💬 Chat
+          </button>
           <button className={styles.btnPreview} onClick={handlePreview}>
             Preview
           </button>
@@ -849,20 +936,100 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
         </div>
 
         {/* Right panel: field editing */}
-        <div className={styles.moduleFields}>
-          {selectedBlock && (
-            <ModuleFields
-              key={selectedModuleName ?? undefined}
-              block={selectedBlock}
-              moduleDefs={moduleDefs}
-              clientId={clientId}
-              onYamlChange={(yaml) => updateBlock(selectedIdx, { yaml })}
-              onBriefChange={(brief) => updateBlock(selectedIdx, { brief })}
-              onGenerate={() => handleGenerate(selectedIdx)}
-              onRemove={() => removeBlock(selectedIdx)}
-            />
-          )}
-        </div>
+        {!chatOpen && (
+          <div className={styles.moduleFields}>
+            {selectedBlock && (
+              <ModuleFields
+                key={selectedModuleName ?? undefined}
+                block={selectedBlock}
+                moduleDefs={moduleDefs}
+                clientId={clientId}
+                onYamlChange={(yaml) => updateBlock(selectedIdx, { yaml })}
+                onBriefChange={(brief) => updateBlock(selectedIdx, { brief })}
+                onGenerate={() => handleGenerate(selectedIdx)}
+                onRemove={() => removeBlock(selectedIdx)}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Chat panel */}
+        {chatOpen && (
+          <div className={styles.chatPanel}>
+            <div className={styles.chatHeader}>
+              <span className={styles.chatTitle}>AI Assistant</span>
+              <button className={styles.chatCloseBtn} onClick={() => setChatOpen(false)}>✕</button>
+            </div>
+            <div className={styles.chatMessages}>
+              {chatMessages.length === 0 && (
+                <p className={styles.chatEmpty}>
+                  Ask me to rearrange sections, add new content, update a module, or anything else about your newsletter.
+                </p>
+              )}
+              {chatMessages.map((msg, i) => {
+                const isAssistant = msg.role === 'assistant'
+                const ops = (msg as AssistantMessage).operations
+                return (
+                  <div key={i} className={`${styles.chatMsg} ${isAssistant ? styles.chatMsgAssistant : styles.chatMsgUser}`}>
+                    <p className={styles.chatMsgText}>{msg.content}</p>
+                    {isAssistant && ops && ops.length > 0 && (
+                      <>
+                        <div className={styles.chatOpsList}>
+                          {ops.map((op, j) => (
+                            <span key={j} className={styles.chatOpsItem}>
+                              {op.type === 'update_module' && `• Update ${op.name} content`}
+                              {op.type === 'add_module' && `• Add ${op.name} module${op.after ? ` after ${op.after}` : ''}`}
+                              {op.type === 'remove_module' && `• Remove ${op.name} module`}
+                              {op.type === 'reorder_modules' && `• Reorder modules`}
+                            </span>
+                          ))}
+                        </div>
+                        <button
+                          className={styles.chatApplyBtn}
+                          onClick={() => {
+                            setBlocks((prev) => applyOperations(prev, ops, moduleDefs))
+                            toast.success('Changes applied')
+                          }}
+                        >
+                          Apply changes
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+              {chatLoading && (
+                <div className={`${styles.chatMsg} ${styles.chatMsgAssistant}`}>
+                  <p className={styles.chatMsgText}>Thinking…</p>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+            <div className={styles.chatInputRow}>
+              <textarea
+                className={styles.chatInput}
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleChatSend()
+                  }
+                }}
+                placeholder="Ask me to add a section, reorder modules, improve content…"
+                rows={2}
+                disabled={chatLoading}
+              />
+              <button
+                className={styles.chatSendBtn}
+                onClick={handleChatSend}
+                disabled={chatLoading || !chatInput.trim()}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Design overlay */}
