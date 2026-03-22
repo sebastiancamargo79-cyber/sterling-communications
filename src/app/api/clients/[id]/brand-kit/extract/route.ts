@@ -88,9 +88,18 @@ export async function POST(
     const pdfBuffer = await downloadPdf(pdfUrl)
     const pdfText = await extractPdfText(pdfBuffer)
 
-    if (!pdfText.trim()) {
+    const trimmedText = pdfText.trim()
+
+    if (!trimmedText) {
       return NextResponse.json(
-        { error: 'Could not extract any text from PDF' },
+        { error: 'PDF text extraction returned empty. The PDF is likely image-based (scanned/designed) with no selectable text. Try a PDF that has selectable/copyable text.' },
+        { status: 400 }
+      )
+    }
+
+    if (trimmedText.length < 100) {
+      return NextResponse.json(
+        { error: `PDF text extraction returned only ${trimmedText.length} characters — too little to extract tokens. The PDF may be mostly images. Extracted text: "${trimmedText.slice(0, 200)}"` },
         { status: 400 }
       )
     }
@@ -164,6 +173,16 @@ IMPORTANT: Return ONLY valid JSON. No explanations, markdown, or code blocks.`
       return NextResponse.json(
         { error: `Invalid extraction response: ${JSON.stringify(validated.error.flatten())}` },
         { status: 500 }
+      )
+    }
+
+    // Check if GPT-4o found anything at all
+    const tokenKeys = ['primaryColor','secondaryColor','bgColor','accentColor','textColor','fontHeadingName','fontBodyName','headingFontSize','bodyFontSize','cardBorderRadius','layoutDensity'] as const
+    const extractedCount = tokenKeys.filter(k => validated.data[k] !== null).length
+    if (extractedCount === 0) {
+      return NextResponse.json(
+        { error: `GPT-4o read the PDF text (${trimmedText.length} chars) but found no brand tokens. The text may not contain explicit color codes, font names, or sizes. Text sample: "${trimmedText.slice(0, 300)}"` },
+        { status: 422 }
       )
     }
 

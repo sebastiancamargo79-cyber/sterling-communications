@@ -324,7 +324,7 @@ export default function BrandStudioClient({
       ].filter((r) => r.newValue) // Only show tokens with extracted values
 
       if (reviews.length === 0) {
-        setExtractionError('No brand tokens could be extracted from this PDF.')
+        setExtractionError('Extraction returned no usable token values. The PDF may be image-based or lacking explicit design specs.')
         setExtracting(false)
         return
       }
