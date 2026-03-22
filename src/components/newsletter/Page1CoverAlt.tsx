@@ -40,6 +40,9 @@ export default function Page1CoverAlt({ data, meta, logoUrl }: Props) {
         </div>
         <div className={styles.teaserPane}>
           <div className={styles.accentBar} />
+          {data.intro_paragraph && (
+            <p className={styles.introParagraph}>{data.intro_paragraph}</p>
+          )}
           <h2 className={styles.teaserHeading}>In This Issue</h2>
           <ul className={styles.teaserList}>
             {data.teasers.map((t, i) => (

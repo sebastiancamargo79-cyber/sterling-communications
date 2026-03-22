@@ -64,6 +64,13 @@
   display: block;
 }
 
+.introParagraph {
+  font-size: 10pt;
+  color: var(--text);
+  line-height: 1.55;
+  margin: 3mm 0 2mm;
+}
+
 .teasers {
   margin-top: 4mm;
 }

@@ -37,11 +37,14 @@ export const MODULE_REGISTRY: ModuleDef[] = [
     storageKey: 'cover',
     fields: [
       { key: 'hero_image_url', label: 'Hero Image URL', type: 'url' },
+      { key: 'intro_paragraph', label: 'Introductory Paragraph', type: 'textarea', placeholder: 'A short welcome message or seasonal greeting...' },
       { key: 'teasers', label: 'Teasers (3–5 lines)', type: 'array' },
     ],
     aiPromptTemplate: `Generate the cover section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 hero_image_url: ""
+intro_paragraph: |
+  [1–2 sentence warm welcome or seasonal greeting for the newsletter cover]
 teasers:
   - "Teaser line 1"
   - "Teaser line 2"

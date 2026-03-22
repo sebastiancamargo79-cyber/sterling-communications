@@ -11,6 +11,7 @@ const MetaSchema = z.object({
 const CoverSchema = z.object({
   hero_image_url: z.string().url(),
   teasers: z.array(z.string().max(40)).min(3).max(5),
+  intro_paragraph: z.string().optional(),
 })
 
 const DirectorUpdateSchema = z.object({

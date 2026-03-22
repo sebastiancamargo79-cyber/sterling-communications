@@ -39,6 +39,10 @@ export default function Page1Cover({ data, meta, logoUrl }: Props) {
 
       <hr className={sharedStyles.rule} />
 
+      {data.intro_paragraph && (
+        <p className={styles.introParagraph}>{data.intro_paragraph}</p>
+      )}
+
       <section className={styles.teasers}>
         <h2 className={styles.teaserHeading}>In This Issue</h2>
         <ul className={styles.teaserList}>
