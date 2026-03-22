@@ -1,14 +1,110 @@
 .main {
   min-height: 100vh;
-  padding: 48px 0;
+}
+
+/* Hero section */
+.hero {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  padding: 36px 0 28px;
+}
+
+.heroContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.heroAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.heroMeta {
+  flex: 1;
+  min-width: 0;
 }
 
 .heading {
-  font-size: 2rem;
+  font-size: 1.875rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.02em;
-  margin-bottom: 40px;
+  line-height: 1.2;
+}
+
+.heroSub {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* Page body */
+.body {
+  padding: 32px 0 60px;
+}
+
+/* Quick action cards */
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.quickAction {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 18px 18px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.quickAction:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.qaIcon {
+  width: 36px;
+  height: 36px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.qaLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.qaDesc {
+  font-size: 0.775rem;
+  color: var(--muted);
 }
 
 .grid {
@@ -200,17 +296,22 @@
   text-decoration: underline;
 }
 
-.headerRow {
+.brandKitHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.brandKitHeader .sectionTitle {
+  margin-bottom: 0;
 }
 
 .btnNewEdition {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 9px 20px;
   background: var(--primary);
   color: #fff;
@@ -430,7 +531,6 @@
 }
 
 .btnBrandKit {
-  grid-column: 1 / -1;
   display: inline-flex;
   align-items: center;
   padding: 9px 20px;

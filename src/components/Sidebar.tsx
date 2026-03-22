@@ -41,7 +41,14 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
-        <div className={styles.brandMark}>SC</div>
+        <div className={styles.brandMark}>
+          <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="2" cy="7" r="2" fill="white"/>
+            <path d="M6 4.5a4 4 0 0 1 0 5" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+            <path d="M10 2.5a7.5 7.5 0 0 1 0 9" stroke="white" strokeWidth="1.7" strokeLinecap="round" opacity="0.6"/>
+            <path d="M14 0.5a11 11 0 0 1 0 13" stroke="white" strokeWidth="1.7" strokeLinecap="round" opacity="0.3"/>
+          </svg>
+        </div>
         <div className={styles.brandText}>
           <span className={styles.brandName}>Sterling Communications</span>
           <span className={styles.brandTagline}>Newsletter Platform</span>

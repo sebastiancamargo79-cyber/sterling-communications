@@ -108,7 +108,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <ul className={styles.list}>
-                {recentEditions.map((e) => (
+                {recentEditions.map((e: (typeof recentEditions)[number]) => (
                   <li key={e.id} className={styles.listItem}>
                     <Link href={`/clients/${e.clientId}`} className={styles.listLink}>
                       <div className={styles.listAvatar} style={{ background: '#6366F1' }}>
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <ul className={styles.list}>
-                {recentClients.map((c) => (
+                {recentClients.map((c: (typeof recentClients)[number]) => (
                   <li key={c.id} className={styles.listItem}>
                     <Link href={`/clients/${c.id}`} className={styles.listLink}>
                       <div
