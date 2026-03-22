@@ -26,7 +26,7 @@ Client and brand kit management platform with newsletter creation pipeline for H
 - **Edition History** — save named editions (snapshots) of newsletters, restore previous editions
 - **Client Delivery Portal** — password-protected public route (`/delivery/[editionId]`) for clients to view published editions via unique access codes
 - **Admin Centre** — manage custom newsletter module definitions (create, edit, delete) and global AI prompt defaults
-- **Brand Studio** — AI-powered design engine with live token editor, PDF extraction, and design chatbot
+- **Brand Studio** — AI-powered design engine per client: live token editor (colours, fonts, layout), PDF brand guideline extraction (pdf-parse + GPT-4o), and a persistent design chatbot for iterating on tokens
 - **Toast Notifications** — success/error feedback on all mutations via sonner
 
 ## Route Architecture
@@ -39,8 +39,7 @@ Client and brand kit management platform with newsletter creation pipeline for H
 /clients/[id]/newsletter/editor          Newsletter editor
 /clients/[id]/newsletter/preview         Newsletter preview + PDF download
 /clients/[id]/newsletter/editions        Edition history
-/brand-studio                            Brand Studio landing
-/brand-studio/[clientId]                 Brand Studio — AI design engine
+/clients/[id]/brand-studio               Brand Studio — token editor, PDF extraction, design chatbot
 /delivery/[editionId]                    Public delivery portal (access code)
 /admin                                   Admin landing
 /admin/modules                           Module management (create, edit, delete)
@@ -147,6 +146,16 @@ signature_title: "Managing Director"
 | `POST` | `/api/clients/[id]/newsletter/editions` | Publish edition |
 | `GET` | `/api/clients/[id]/newsletter/pdf` | Generate PDF |
 | `POST` | `/api/newsletter/generate` | AI-generate module content (GPT-4o) |
+
+### Brand Kit
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/clients/[id]/brand-kit` | Get brand kit |
+| `PUT` | `/api/clients/[id]/brand-kit` | Update tokens or upload logo |
+| `POST` | `/api/clients/[id]/brand-kit/extract` | Extract brand tokens from a PDF via GPT-4o |
+| `GET` | `/api/clients/[id]/brand-kit/chat` | Load design chatbot history |
+| `POST` | `/api/clients/[id]/brand-kit/chat` | Send design chatbot message |
+| `POST` | `/api/clients/[id]/brand-kit/fonts` | Upload heading/body font files |
 
 ### Admin
 | Method | Path | Description |
