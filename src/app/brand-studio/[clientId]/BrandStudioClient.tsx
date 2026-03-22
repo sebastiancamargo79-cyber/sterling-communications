@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import Container from '@/components/Container'
 import styles from './page.module.css'
 
@@ -79,6 +80,7 @@ export default function BrandStudioClient({
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [extracting, setExtracting] = useState(false)
+  const [extractionError, setExtractionError] = useState<string | null>(null)
   const [extractionReview, setExtractionReview] = useState<ExtractionReview[]>([])
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
@@ -129,6 +131,7 @@ export default function BrandStudioClient({
     if (!file) return
 
     setExtracting(true)
+    setExtractionError(null)
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -140,7 +143,9 @@ export default function BrandStudioClient({
 
       if (!uploadRes.ok) {
         const err = await uploadRes.json().catch(() => ({}))
-        alert(`Upload failed: ${err.error ?? uploadRes.statusText}`)
+        const msg = `Upload failed: ${err.error ?? uploadRes.statusText}`
+        setExtractionError(msg)
+        toast.error(msg)
         setExtracting(false)
         return
       }
@@ -157,7 +162,9 @@ export default function BrandStudioClient({
 
       if (!extractRes.ok) {
         const error = await extractRes.json().catch(() => ({}))
-        alert(`Extraction failed: ${error.error ?? extractRes.statusText}`)
+        const msg = `Extraction failed: ${error.error ?? extractRes.statusText}`
+        setExtractionError(msg)
+        toast.error(msg)
         setExtracting(false)
         return
       }
@@ -165,7 +172,9 @@ export default function BrandStudioClient({
       const data: ExtractionResponse = await extractRes.json()
       await handleExtractData(data)
     } catch (err) {
-      alert('Error: ' + (err instanceof Error ? err.message : String(err)))
+      const msg = 'Error: ' + (err instanceof Error ? err.message : String(err))
+      setExtractionError(msg)
+      toast.error(msg)
     } finally {
       setExtracting(false)
     }
@@ -175,6 +184,7 @@ export default function BrandStudioClient({
     if (!pdfUrl) return
 
     setExtracting(true)
+    setExtractionError(null)
     try {
       const res = await fetch(`/api/clients/${clientId}/brand-kit/extract`, {
         method: 'POST',
@@ -183,15 +193,19 @@ export default function BrandStudioClient({
       })
 
       if (!res.ok) {
-        const error = await res.json()
-        alert(`Extraction failed: ${error.error}`)
+        const error = await res.json().catch(() => ({}))
+        const msg = `Extraction failed: ${error.error ?? res.statusText}`
+        setExtractionError(msg)
+        toast.error(msg)
         return
       }
 
       const data: ExtractionResponse = await res.json()
       await handleExtractData(data)
     } catch (err) {
-      alert('Extraction error: ' + (err instanceof Error ? err.message : String(err)))
+      const msg = 'Extraction error: ' + (err instanceof Error ? err.message : String(err))
+      setExtractionError(msg)
+      toast.error(msg)
     } finally {
       setExtracting(false)
     }
@@ -280,7 +294,9 @@ export default function BrandStudioClient({
       ].filter((r) => r.newValue) // Only show tokens with extracted values
 
       if (reviews.length === 0) {
-        alert('No brand tokens could be extracted from this PDF. It may be image-based or lack explicit color/font information.')
+        const msg = 'No brand tokens could be extracted from this PDF. It may be image-based or lack explicit color/font information.'
+        setExtractionError(msg)
+        toast.error(msg)
         return
       }
 
@@ -560,6 +576,9 @@ export default function BrandStudioClient({
             {/* PDF Extraction */}
             <div className={styles.extractionSection}>
               <h3 className={styles.panelTitle}>PDF Extraction</h3>
+              {extractionError && (
+                <div className={styles.extractionError}>{extractionError}</div>
+              )}
               {extractionReview.length === 0 ? (
                 <div className={styles.uploadArea}>
                   <input

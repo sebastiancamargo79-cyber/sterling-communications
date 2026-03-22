@@ -163,6 +163,15 @@
   gap: 1rem;
 }
 
+.extractionError {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
 .uploadArea {
   display: flex;
   flex-direction: column;
