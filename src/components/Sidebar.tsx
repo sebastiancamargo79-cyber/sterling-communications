@@ -42,11 +42,10 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
         <div className={styles.brandMark}>
-          <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="2" cy="7" r="2" fill="white"/>
-            <path d="M6 4.5a4 4 0 0 1 0 5" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
-            <path d="M10 2.5a7.5 7.5 0 0 1 0 9" stroke="white" strokeWidth="1.7" strokeLinecap="round" opacity="0.6"/>
-            <path d="M14 0.5a11 11 0 0 1 0 13" stroke="white" strokeWidth="1.7" strokeLinecap="round" opacity="0.3"/>
+          <svg width="14" height="17" viewBox="0 0 14 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 1 L13.5 7 L0.5 7 Z" fill="white"/>
+            <path d="M0.5 7 L13.5 7 L7 16 Z" fill="white" opacity="0.55"/>
+            <line x1="0.5" y1="7" x2="13.5" y2="7" stroke="#818CF8" strokeWidth="0.75"/>
           </svg>
         </div>
         <div className={styles.brandText}>
