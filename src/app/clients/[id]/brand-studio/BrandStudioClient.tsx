@@ -340,11 +340,20 @@ export default function BrandStudioClient({
   }
 
   const applySelectedExtraction = () => {
-    extractionReview.forEach((review) => {
-      if (review.accepted && review.newValue) {
-        handleTokenChange(review.token, review.newValue)
+    const accepted = extractionReview.filter((r) => r.accepted && r.newValue)
+    if (accepted.length === 0) {
+      setExtractionReview([])
+      return
+    }
+    setTokens((prev) => {
+      const next = { ...prev }
+      for (const r of accepted) {
+        ;(next as Record<string, string>)[r.token] = r.newValue
       }
+      return next
     })
+    setSaveMessage(`Applied ${accepted.length} extracted token${accepted.length === 1 ? '' : 's'} — click Save Brand Kit to persist`)
+    setTimeout(() => setSaveMessage(null), 5000)
     setExtractionReview([])
   }
 
