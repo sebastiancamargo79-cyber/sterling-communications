@@ -67,9 +67,9 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch(`/api/clients/${clientId}/brand-kit`, {
-        method: 'PUT',
-        body: formData as any,
+      const res = await fetch(`/api/clients/${clientId}/brand-kit/logo`, {
+        method: 'POST',
+        body: formData,
       })
       if (!res.ok) throw new Error('Logo upload failed')
       const { logoUrl: newUrl } = await res.json()
