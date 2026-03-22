@@ -1,39 +1,89 @@
-:root {
-  /* Core palette — modern dark SaaS */
+/* ─── DARK THEME (default) ─────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
   --bg: #0D0F14;
   --bg-subtle: #111520;
+  --bg-elevated: #1A2035;
   --card: #161B27;
+  --card-hover: #1C2233;
   --text: #E2E8F0;
+  --text-secondary: #94A3B8;
   --muted: #64748B;
   --border: #1E2638;
   --borderLight: #1A2030;
   --primary: #6366F1;
   --primaryHover: #4F46E5;
+  --primary-glow: rgba(99, 102, 241, 0.2);
   --accent: #6366F1;
   --accentHover: #4F46E5;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
   --radius: 10px;
   --radius-lg: 14px;
+  --radius-xl: 20px;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 4px 20px rgba(99, 102, 241, 0.15);
   --font-heading: 'Libre Baskerville', Georgia, serif;
   --font-body: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  /* Sidebar tokens */
+  /* Sidebar */
   --sidebar-bg: #090C12;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
   --sidebar-text: #E2E8F0;
   --sidebar-muted: #64748B;
   --sidebar-accent: #818CF8;
-  /* Newsletter brand tokens — used in print layout, keep as-is */
-  --brand-primary:   #006938;
+  --sidebar-active-bg: rgba(99, 102, 241, 0.15);
+  --sidebar-active-text: #A5B4FC;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  /* Newsletter brand tokens — print layout only */
+  --brand-primary: #006938;
   --brand-secondary: #1a5c38;
-  --brand-bg:        #f5f5f0;
-  --brand-accent:    #1a5c38;
+  --brand-bg: #f5f5f0;
+  --brand-accent: #1a5c38;
   --brand-text: #10263B;
   --brand-heading-size: 22px;
   --brand-body-size: 13px;
   --brand-radius: 6px;
 }
 
+/* ─── LIGHT THEME ──────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg: #F5F7FF;
+  --bg-subtle: #EDEEF8;
+  --bg-elevated: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F8F9FF;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --muted: #64748B;
+  --border: #E2E8F0;
+  --borderLight: #F1F5F9;
+  --primary: #6366F1;
+  --primaryHover: #4F46E5;
+  --primary-glow: rgba(99, 102, 241, 0.12);
+  --accent: #6366F1;
+  --accentHover: #4F46E5;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 0 1px rgba(99, 102, 241, 0.2), 0 4px 20px rgba(99, 102, 241, 0.1);
+  /* Sidebar stays dark for contrast */
+  --sidebar-bg: #1E1B4B;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-text: #E0E7FF;
+  --sidebar-muted: #A5B4FC;
+  --sidebar-accent: #C7D2FE;
+  --sidebar-active-bg: rgba(199, 210, 254, 0.15);
+  --sidebar-active-text: #C7D2FE;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.07);
+}
+
+/* ─── BASE ─────────────────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -53,6 +103,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 a {
@@ -60,8 +111,8 @@ a {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {

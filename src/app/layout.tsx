@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Libre_Baskerville, Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import Sidebar from '@/components/Sidebar'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
 const libreBaskerville = Libre_Baskerville({
@@ -18,7 +19,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Sterling Communications',
-  description: 'Office and brand kit management platform',
+  description: 'Newsletter platform for Home Instead franchise offices',
 }
 
 export default function RootLayout({
@@ -27,15 +28,26 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${libreBaskerville.variable} ${inter.variable}`}>
+    <html lang="en" className={`${libreBaskerville.variable} ${inter.variable}`} data-theme="dark">
+      <head>
+        {/* Anti-FOUC: read stored theme before paint */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var t = localStorage.getItem('sc-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+          } catch(e) {}
+        ` }} />
+      </head>
       <body>
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-          <Sidebar />
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {children}
+        <ThemeProvider>
+          <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            <Sidebar />
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {children}
+            </div>
           </div>
-        </div>
-        <Toaster position="bottom-right" richColors closeButton />
+          <Toaster position="bottom-right" richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   )

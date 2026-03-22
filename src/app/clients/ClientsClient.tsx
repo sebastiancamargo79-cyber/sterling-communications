@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Plus, Users } from 'lucide-react'
 import Container from '@/components/Container'
 import DeleteModal from '@/components/DeleteModal'
 import styles from './page.module.css'
@@ -51,40 +52,54 @@ export default function ClientsClient({ clients }: Props) {
             <p className={styles.subtitle}>{clients.length} client{clients.length !== 1 ? 's' : ''}</p>
           </div>
           <Link href="/clients/new" className={styles.btnNew}>
-            + New Client
+            <Plus size={15} />
+            New Client
           </Link>
         </div>
 
         {clients.length === 0 ? (
           <div className={styles.empty}>
-            <p>No clients yet.</p>
-            <Link href="/clients/new" className={styles.btnNewLg}>Create your first client</Link>
+            <div className={styles.emptyIcon}><Users size={24} /></div>
+            <p className={styles.emptyTitle}>No clients yet</p>
+            <p className={styles.emptyText}>Add your first franchise office to get started.</p>
+            <Link href="/clients/new" className={styles.btnNewLg}>
+              <Plus size={15} />
+              Create first client
+            </Link>
           </div>
         ) : (
           <div className={styles.grid}>
-            {clients.map((client) => (
-              <div key={client.id} className={styles.cardWrap}>
-                <Link href={`/clients/${client.id}`} className={styles.card}>
-                  <div
-                    className={styles.avatar}
-                    style={{ background: client.brandKit?.primaryColor ?? 'var(--primary)' }}
+            {clients.map((client) => {
+              const color = client.brandKit?.primaryColor ?? 'var(--primary)'
+              return (
+                <div key={client.id} className={styles.cardWrap}>
+                  <Link
+                    href={`/clients/${client.id}`}
+                    className={styles.card}
+                    style={{ '--client-color': color } as React.CSSProperties}
                   >
-                    {client.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className={styles.clientName}>{client.name}</span>
-                  <span className={styles.clientMeta}>
-                    {client.brandKit ? client.brandKit.mode : 'No brand kit'}
-                  </span>
-                </Link>
-                <button
-                  className={styles.btnRemove}
-                  onClick={(e) => { e.preventDefault(); setDeletingId(client.id) }}
-                  title="Remove client"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+                    <div className={styles.cardTop}>
+                      <div className={styles.avatar} style={{ background: color }}>
+                        {client.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className={styles.clientName}>{client.name}</div>
+                        <div className={styles.clientMeta}>
+                          {client.brandKit ? client.brandKit.mode : 'No brand kit'}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                  <button
+                    className={styles.btnRemove}
+                    onClick={(e) => { e.preventDefault(); setDeletingId(client.id) }}
+                    title="Remove client"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )}
       </Container>

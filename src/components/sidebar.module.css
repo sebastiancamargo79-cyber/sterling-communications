@@ -97,19 +97,19 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--sidebar-hover-bg);
   color: var(--sidebar-text);
 }
 
 .navItemActive {
-  background: rgba(99, 102, 241, 0.15);
-  color: #A5B4FC;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
   font-weight: 600;
 }
 
 .navItemActive:hover {
-  background: rgba(99, 102, 241, 0.2);
-  color: #A5B4FC;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
 }
 
 .subNavGroup {
@@ -151,23 +151,48 @@
 }
 
 .navSubItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--sidebar-hover-bg);
   color: var(--sidebar-text);
 }
 
 .navSubItemActive {
-  background: rgba(99, 102, 241, 0.15);
-  color: #A5B4FC;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
   font-weight: 600;
 }
 
 .navSubItemActive:hover {
-  background: rgba(99, 102, 241, 0.2);
-  color: #A5B4FC;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
 }
 
 .sidebarFooter {
   padding: 12px 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--sidebar-muted);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  text-align: left;
+}
+
+.themeToggle:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+}
+
+.themeToggle span {
+  font-size: 0.8rem;
 }
