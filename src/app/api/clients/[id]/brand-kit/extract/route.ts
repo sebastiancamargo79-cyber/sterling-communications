@@ -58,17 +58,8 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
       throw new Error('No text extracted from PDF')
     }
 
-    // Sample from multiple points in the document to avoid getting stuck in the TOC.
-    // Brand specs (hex codes, font names) are usually in the middle/later pages.
-    const len = text.length
-    const chunks = [
-      text.slice(0, 1000),
-      text.slice(Math.floor(len * 0.2), Math.floor(len * 0.2) + 2000),
-      text.slice(Math.floor(len * 0.4), Math.floor(len * 0.4) + 2000),
-      text.slice(Math.floor(len * 0.6), Math.floor(len * 0.6) + 2000),
-      text.slice(Math.floor(len * 0.8), Math.floor(len * 0.8) + 1000),
-    ]
-    return chunks.join('\n\n---\n\n')
+    // Send the full document text (up to 20k chars) so no pages are missed
+    return text.slice(0, 20000)
   } catch (e) {
     throw new Error(`Failed to parse PDF: ${e instanceof Error ? e.message : String(e)}`)
   }
