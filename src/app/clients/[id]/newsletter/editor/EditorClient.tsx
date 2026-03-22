@@ -520,7 +520,7 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
   const isInitialMount = useRef(true)
   const [addingModule, setAddingModule] = useState(false)
   const [editionOpen, setEditionOpen] = useState(false)
-  const [editionTitle, setEditionTitle] = useState('')
+  const [newEditionTitle, setNewEditionTitle] = useState('')
   const [savingEdition, setSavingEdition] = useState(false)
   const [selectedModuleName, setSelectedModuleName] = useState<string | null>(null)
 
@@ -682,10 +682,6 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current) }
   }, [blocks, clientId, editionId, tokenOverrides])
 
-  const previewHref = editionId
-    ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}`
-    : `/clients/${clientId}/newsletter/preview`
-
   const handlePreview = useCallback(async () => {
     // Flush any pending auto-save before navigating to preview
     if (saveTimeoutRef.current) {
@@ -711,11 +707,16 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
     } catch {
       // Non-fatal — navigate anyway
     }
-    router.push(previewHref)
-  }, [blocks, clientId, editionId, previewHref, router, tokenOverrides])
+    // Append timestamp to bust Next.js Router Cache so the preview always re-fetches from DB
+    const ts = Date.now()
+    const href = editionId
+      ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}&t=${ts}`
+      : `/clients/${clientId}/newsletter/preview?t=${ts}`
+    router.push(href)
+  }, [blocks, clientId, editionId, router, tokenOverrides])
 
   const handleSaveEdition = async () => {
-    if (!editionTitle.trim()) return
+    if (!newEditionTitle.trim()) return
     setSavingEdition(true)
     try {
       const rawContent = serializeModuleArray(blocks)
@@ -727,10 +728,10 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
       const res = await fetch(`/api/clients/${clientId}/newsletter/editions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: editionTitle.trim() }),
+        body: JSON.stringify({ title: newEditionTitle.trim() }),
       })
       if (res.ok) {
-        setEditionTitle('')
+        setNewEditionTitle('')
         setEditionOpen(false)
         toast.success('Edition saved')
       } else {
@@ -777,12 +778,12 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
               <input
                 className={styles.editionInput}
                 type="text"
-                value={editionTitle}
-                onChange={(e) => setEditionTitle(e.target.value)}
+                value={newEditionTitle}
+                onChange={(e) => setNewEditionTitle(e.target.value)}
                 placeholder="Edition title…"
                 autoFocus
               />
-              <button className={styles.btnEdition} onClick={handleSaveEdition} disabled={savingEdition || !editionTitle.trim()}>
+              <button className={styles.btnEdition} onClick={handleSaveEdition} disabled={savingEdition || !newEditionTitle.trim()}>
                 {savingEdition ? 'Saving…' : 'Publish Edition'}
               </button>
               <button className={styles.btnCancelSmall} onClick={() => setEditionOpen(false)}>✕</button>

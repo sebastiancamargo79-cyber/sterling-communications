@@ -110,12 +110,22 @@ export default function ModuleDesignOverlay({
 
       if (!res.ok) throw new Error('Request failed')
       const data = await res.json() as { message: string; changes: Change[] }
+      const changes = data.changes ?? []
+
+      // Auto-apply all suggested changes immediately so preview updates instantly
+      for (const change of changes) {
+        if (change.type === 'token' && change.token && change.value) {
+          onApplyToken(change.token, change.value, change.scope ?? 'edition')
+        } else if (change.type === 'variant' && change.variant) {
+          onApplyVariant(change.variant)
+        }
+      }
 
       const assistantMsg: ChatMessage = {
         role: 'assistant',
         content: data.message,
-        changes: data.changes ?? [],
-        appliedIndexes: new Set(),
+        changes,
+        appliedIndexes: new Set(changes.map((_, i) => i)),
       }
       setHistory((prev) => [...prev, assistantMsg])
     } catch {

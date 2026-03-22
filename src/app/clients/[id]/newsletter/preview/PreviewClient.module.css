@@ -1,0 +1,132 @@
+.wrapper {
+  background: #e0e0e0;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.printBar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.backLink {
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  margin-right: auto;
+}
+.backLink:hover { text-decoration: underline; }
+
+.printBarTitle {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Design action buttons (undo + save) */
+.designActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnUndo {
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #888;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.btnUndo:hover { background: #f5f5f5; }
+
+.btnSave {
+  font-size: 13px;
+  padding: 5px 14px;
+  background: #006938;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btnSave:hover:not(:disabled) { background: #004d28; }
+.btnSave:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+
+/* Per-module hover wrapper */
+.moduleWrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.moduleWrapActive {
+  outline: 2px solid #006938;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Design button — appears on hover */
+.moduleDesignBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(16, 38, 59, 0.82);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  z-index: 20;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.moduleWrap:hover .moduleDesignBtn {
+  opacity: 1;
+}
+
+.moduleDesignBtnActive {
+  opacity: 1 !important;
+  background: #006938;
+}
+
+@media print {
+  .wrapper {
+    background: #fff;
+    padding: 0;
+  }
+
+  .printBar {
+    display: none;
+  }
+
+  .pages {
+    gap: 0;
+  }
+
+  .moduleDesignBtn {
+    display: none;
+  }
+}

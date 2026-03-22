@@ -80,32 +80,34 @@ ${tokensList}
 EDITION-SPECIFIC OVERRIDES ALREADY APPLIED:
 ${overridesList}
 
+VALID TOKEN NAMES (use exactly these):
+- primaryColor — main brand color (hex)
+- secondaryColor — secondary brand color (hex)
+- bgColor — page/section background color (hex)
+- accentColor — accent/highlight color (hex)
+- textColor — body text color (hex)
+- headingFontSize — e.g. "24px"
+- bodyFontSize — e.g. "14px"
+- cardBorderRadius — e.g. "8px"
+- fontHeadingName — font name string e.g. "Montserrat"
+- fontBodyName — font name string e.g. "Inter"
+
 VARIANT OPTIONS for ${moduleType}:
-- "classic" — default layout (current)
+- "classic" — default layout
 - "alternate" — alternative layout for variety
 
-You can suggest:
-1. Token changes scoped to this edition only (scope: "edition") — these sit on top of the brand kit
-2. Token changes scoped globally to the brand kit (scope: "global") — these update the brand kit
-3. A layout variant change (type: "variant")
-
 Rules:
-- Prefer edition-scoped token changes unless the user explicitly asks to update the brand
-- Provide specific values: exact hex colors, pixel sizes, font names
-- Keep the brand identity intact — refine, don't redesign unless asked
-- Only suggest changes that make aesthetic sense for the module content shown
+- ALWAYS use scope: "edition" for ALL token changes — NEVER use scope: "global" unless the user explicitly says "update brand everywhere" or "change the brand kit"
+- Provide specific concrete values: exact hex colors (#rrggbb), exact pixel sizes, exact font names
+- When the user asks to change a color (e.g. "change green to blue"), pick a specific professional hex color value
+- Always suggest AT LEAST ONE change when the user requests a change — never return empty changes if a change was requested
+- Suggest 2-4 concrete token changes that directly address the user's request
 
-Respond with ONLY this JSON (no markdown, no code blocks):
-{
-  "message": "Your conversational explanation of the changes",
-  "changes": [
-    { "type": "token", "token": "bgColor", "value": "#f5f0eb", "scope": "edition", "reason": "Warmer background" },
-    { "type": "variant", "variant": "alternate", "reason": "Split layout adds visual interest" }
-  ]
-}
+Respond with ONLY valid JSON — no markdown, no code fences, no explanation outside the JSON:
+{"message":"Your conversational explanation","changes":[{"type":"token","token":"bgColor","value":"#f5f0eb","scope":"edition","reason":"Warmer background"},{"type":"variant","variant":"alternate","reason":"Split layout adds visual interest"}]}
 
-If no changes are needed, set "changes": [].
-ALWAYS respond with valid JSON only.`
+If no changes are warranted, set "changes": [].
+Output ONLY the JSON object, nothing else.`
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -119,16 +121,23 @@ ALWAYS respond with valid JSON only.`
       ],
     })
 
-    const responseText = completion.choices[0]?.message?.content ?? '{}'
+    const rawText = completion.choices[0]?.message?.content ?? '{}'
+    // Strip markdown code fences GPT-4o sometimes adds despite instructions
+    const responseText = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```\s*$/i, '')
+      .trim()
 
     let parsedResponse: { message?: string; changes?: unknown[] }
     try {
       parsedResponse = JSON.parse(responseText)
     } catch {
-      return NextResponse.json(
-        { error: 'Failed to parse AI response as JSON' },
-        { status: 500 }
-      )
+      // If JSON parse still fails, return empty changes with the raw text as message
+      return NextResponse.json({
+        message: rawText,
+        changes: [],
+      })
     }
 
     return NextResponse.json({
