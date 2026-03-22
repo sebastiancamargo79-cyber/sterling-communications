@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { brandKits } from '@/db/schema'
 
@@ -62,20 +62,15 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
     }
   }
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const handleLogoFile = useCallback(async (file: File) => {
     setUploadingLogo(true)
     try {
       const formData = new FormData()
       formData.append('file', file)
-
       const res = await fetch(`/api/clients/${clientId}/brand-kit`, {
         method: 'PUT',
-        body: formData as any, // FormData with logo upload
+        body: formData as any,
       })
-
       if (!res.ok) throw new Error('Logo upload failed')
       const { logoUrl: newUrl } = await res.json()
       setLogoUrl(newUrl)
@@ -87,6 +82,27 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
       setUploadingLogo(false)
       if (logoInputRef.current) logoInputRef.current.value = ''
     }
+  }, [clientId])
+
+  // Global paste handler — pastes an image from clipboard as the logo
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      for (const item of Array.from(e.clipboardData?.items ?? [])) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) { handleLogoFile(file); break }
+        }
+      }
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [handleLogoFile])
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleLogoFile(file)
   }
 
   const handleFontUpload = async (type: 'heading' | 'body', file: File) => {
@@ -441,7 +457,7 @@ export default function BrandKitClient({ clientId, clientName, brandKit }: Props
             style={{ display: 'none' }}
           />
           <p style={{ margin: 0, color: '#666' }}>
-            {uploadingLogo ? 'Uploading…' : 'Click to upload logo image'}
+            {uploadingLogo ? 'Uploading…' : 'Click to upload · or paste an image (⌘V)'}
           </p>
         </div>
       </section>

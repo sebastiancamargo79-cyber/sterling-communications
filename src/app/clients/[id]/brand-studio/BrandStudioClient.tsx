@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import Container from '@/components/Container'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { toast } from 'sonner'
 import styles from './page.module.css'
 
 interface BrandKit {
@@ -67,16 +66,13 @@ export default function BrandStudioClient({
   clientId,
   clientName,
   brandKit,
-  draftContent,
 }: {
   clientId: string
   clientName: string
   brandKit: BrandKit | null
   draftContent: string | null
 }) {
-  const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [extracting, setExtracting] = useState(false)
   const [extractionError, setExtractionError] = useState<string | null>(null)
@@ -97,7 +93,6 @@ export default function BrandStudioClient({
   const fontHeadingInputRef = useRef<HTMLInputElement>(null)
   const fontBodyInputRef = useRef<HTMLInputElement>(null)
 
-  // Token state
   const [tokens, setTokens] = useState({
     primaryColor: brandKit?.primaryColor ?? '#006938',
     secondaryColor: brandKit?.secondaryColor ?? '#1a5c38',
@@ -112,7 +107,6 @@ export default function BrandStudioClient({
     layoutDensity: brandKit?.layoutDensity ?? 'normal',
   })
 
-  // Load chat history on mount
   useEffect(() => {
     ;(async () => {
       try {
@@ -127,7 +121,6 @@ export default function BrandStudioClient({
     })()
   }, [clientId])
 
-  // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
@@ -136,9 +129,7 @@ export default function BrandStudioClient({
     setTokens((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleLogoFile = useCallback(async (file: File) => {
     setUploadingLogo(true)
     try {
       const formData = new FormData()
@@ -150,14 +141,34 @@ export default function BrandStudioClient({
       if (!res.ok) throw new Error('Logo upload failed')
       const { logoUrl: newUrl } = await res.json()
       setLogoUrl(newUrl)
-      setSaveMessage('Logo saved!')
-      setTimeout(() => setSaveMessage(null), 3000)
+      toast.success('Logo saved')
     } catch {
-      setSaveMessage('Error: Logo upload failed')
+      toast.error('Logo upload failed')
     } finally {
       setUploadingLogo(false)
       if (logoInputRef.current) logoInputRef.current.value = ''
     }
+  }, [clientId])
+
+  // Global paste → logo
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      for (const item of Array.from(e.clipboardData?.items ?? [])) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) { handleLogoFile(file); break }
+        }
+      }
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [handleLogoFile])
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleLogoFile(file)
   }
 
   const handleFontUpload = async (type: 'heading' | 'body', file: File) => {
@@ -177,10 +188,9 @@ export default function BrandStudioClient({
       } else {
         setFontBodyUrl(updated.fontBodyUrl || '')
       }
-      setSaveMessage(`${type === 'heading' ? 'Heading' : 'Body'} font saved!`)
-      setTimeout(() => setSaveMessage(null), 3000)
+      toast.success(`${type === 'heading' ? 'Heading' : 'Body'} font saved`)
     } catch {
-      setSaveMessage('Error: Font upload failed')
+      toast.error('Font upload failed')
     } finally {
       setUploadingFont(null)
     }
@@ -197,15 +207,10 @@ export default function BrandStudioClient({
       const formData = new FormData()
       formData.append('file', file)
 
-      const uploadRes = await fetch(`/api/upload`, {
-        method: 'POST',
-        body: formData,
-      })
-
+      const uploadRes = await fetch(`/api/upload`, { method: 'POST', body: formData })
       if (!uploadRes.ok) {
         const err = await uploadRes.json().catch(() => ({}))
-        const msg = `Upload failed (${uploadRes.status}): ${err.error ?? uploadRes.statusText}`
-        setExtractionError(msg)
+        setExtractionError(`Upload failed (${uploadRes.status}): ${err.error ?? uploadRes.statusText}`)
         setUploadStep(null)
         setExtracting(false)
         return
@@ -213,8 +218,7 @@ export default function BrandStudioClient({
 
       const uploadJson = await uploadRes.json().catch(() => null)
       if (!uploadJson?.url) {
-        const msg = 'Upload failed: server returned no URL'
-        setExtractionError(msg)
+        setExtractionError('Upload failed: server returned no URL')
         setUploadStep(null)
         setExtracting(false)
         return
@@ -229,110 +233,39 @@ export default function BrandStudioClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pdfUrl: url }),
       })
-
       setUploadStep(null)
 
       if (!res.ok) {
         const error = await res.json().catch(() => ({}))
-        const msg = `Extraction failed (${res.status}): ${error.error ?? res.statusText}`
-        setExtractionError(msg)
+        setExtractionError(`Extraction failed (${res.status}): ${error.error ?? res.statusText}`)
         setExtracting(false)
         return
       }
 
       const data: ExtractionResponse = await res.json()
 
-      // Build review list
       const reviews: ExtractionReview[] = [
-        {
-          token: 'primaryColor',
-          oldValue: tokens.primaryColor,
-          newValue: data.primaryColor || '',
-          confidence: data.confidence.primaryColor || 0,
-          accepted: (data.confidence.primaryColor || 0) > 0.7,
-        },
-        {
-          token: 'secondaryColor',
-          oldValue: tokens.secondaryColor,
-          newValue: data.secondaryColor || '',
-          confidence: data.confidence.secondaryColor || 0,
-          accepted: (data.confidence.secondaryColor || 0) > 0.7,
-        },
-        {
-          token: 'bgColor',
-          oldValue: tokens.bgColor,
-          newValue: data.bgColor || '',
-          confidence: data.confidence.bgColor || 0,
-          accepted: (data.confidence.bgColor || 0) > 0.7,
-        },
-        {
-          token: 'accentColor',
-          oldValue: tokens.accentColor,
-          newValue: data.accentColor || '',
-          confidence: data.confidence.accentColor || 0,
-          accepted: (data.confidence.accentColor || 0) > 0.7,
-        },
-        {
-          token: 'textColor',
-          oldValue: tokens.textColor,
-          newValue: data.textColor || '',
-          confidence: data.confidence.textColor || 0,
-          accepted: (data.confidence.textColor || 0) > 0.7,
-        },
-        {
-          token: 'fontHeadingName',
-          oldValue: tokens.fontHeadingName || null,
-          newValue: data.fontHeadingName || '',
-          confidence: data.confidence.fontHeadingName || 0,
-          accepted: (data.confidence.fontHeadingName || 0) > 0.7,
-        },
-        {
-          token: 'fontBodyName',
-          oldValue: tokens.fontBodyName || null,
-          newValue: data.fontBodyName || '',
-          confidence: data.confidence.fontBodyName || 0,
-          accepted: (data.confidence.fontBodyName || 0) > 0.7,
-        },
-        {
-          token: 'headingFontSize',
-          oldValue: tokens.headingFontSize,
-          newValue: data.headingFontSize || '',
-          confidence: data.confidence.headingFontSize || 0,
-          accepted: (data.confidence.headingFontSize || 0) > 0.7,
-        },
-        {
-          token: 'bodyFontSize',
-          oldValue: tokens.bodyFontSize,
-          newValue: data.bodyFontSize || '',
-          confidence: data.confidence.bodyFontSize || 0,
-          accepted: (data.confidence.bodyFontSize || 0) > 0.7,
-        },
-        {
-          token: 'cardBorderRadius',
-          oldValue: tokens.cardBorderRadius,
-          newValue: data.cardBorderRadius || '',
-          confidence: data.confidence.cardBorderRadius || 0,
-          accepted: (data.confidence.cardBorderRadius || 0) > 0.7,
-        },
-        {
-          token: 'layoutDensity',
-          oldValue: tokens.layoutDensity,
-          newValue: data.layoutDensity || '',
-          confidence: data.confidence.layoutDensity || 0,
-          accepted: (data.confidence.layoutDensity || 0) > 0.7,
-        },
-      ].filter((r) => r.newValue) // Only show tokens with extracted values
+        { token: 'primaryColor', oldValue: tokens.primaryColor, newValue: data.primaryColor || '', confidence: data.confidence.primaryColor || 0, accepted: (data.confidence.primaryColor || 0) > 0.7 },
+        { token: 'secondaryColor', oldValue: tokens.secondaryColor, newValue: data.secondaryColor || '', confidence: data.confidence.secondaryColor || 0, accepted: (data.confidence.secondaryColor || 0) > 0.7 },
+        { token: 'bgColor', oldValue: tokens.bgColor, newValue: data.bgColor || '', confidence: data.confidence.bgColor || 0, accepted: (data.confidence.bgColor || 0) > 0.7 },
+        { token: 'accentColor', oldValue: tokens.accentColor, newValue: data.accentColor || '', confidence: data.confidence.accentColor || 0, accepted: (data.confidence.accentColor || 0) > 0.7 },
+        { token: 'textColor', oldValue: tokens.textColor, newValue: data.textColor || '', confidence: data.confidence.textColor || 0, accepted: (data.confidence.textColor || 0) > 0.7 },
+        { token: 'fontHeadingName', oldValue: tokens.fontHeadingName || null, newValue: data.fontHeadingName || '', confidence: data.confidence.fontHeadingName || 0, accepted: (data.confidence.fontHeadingName || 0) > 0.7 },
+        { token: 'fontBodyName', oldValue: tokens.fontBodyName || null, newValue: data.fontBodyName || '', confidence: data.confidence.fontBodyName || 0, accepted: (data.confidence.fontBodyName || 0) > 0.7 },
+        { token: 'headingFontSize', oldValue: tokens.headingFontSize, newValue: data.headingFontSize || '', confidence: data.confidence.headingFontSize || 0, accepted: (data.confidence.headingFontSize || 0) > 0.7 },
+        { token: 'bodyFontSize', oldValue: tokens.bodyFontSize, newValue: data.bodyFontSize || '', confidence: data.confidence.bodyFontSize || 0, accepted: (data.confidence.bodyFontSize || 0) > 0.7 },
+        { token: 'cardBorderRadius', oldValue: tokens.cardBorderRadius, newValue: data.cardBorderRadius || '', confidence: data.confidence.cardBorderRadius || 0, accepted: (data.confidence.cardBorderRadius || 0) > 0.7 },
+        { token: 'layoutDensity', oldValue: tokens.layoutDensity, newValue: data.layoutDensity || '', confidence: data.confidence.layoutDensity || 0, accepted: (data.confidence.layoutDensity || 0) > 0.7 },
+      ].filter((r) => r.newValue)
 
       if (reviews.length === 0) {
-        setExtractionError('Extraction returned no usable token values. The PDF may be image-based or lacking explicit design specs.')
+        setExtractionError('Extraction returned no usable values. The PDF may be image-based or lacking explicit design specs.')
         setExtracting(false)
         return
       }
-
       setExtractionReview(reviews)
     } catch (err) {
-      const msg = 'Error: ' + (err instanceof Error ? err.message : String(err))
-      setExtractionError(msg)
+      setExtractionError('Error: ' + (err instanceof Error ? err.message : String(err)))
       setUploadStep(null)
     } finally {
       setExtracting(false)
@@ -341,36 +274,25 @@ export default function BrandStudioClient({
 
   const applySelectedExtraction = () => {
     const accepted = extractionReview.filter((r) => r.accepted && r.newValue)
-    if (accepted.length === 0) {
-      setExtractionReview([])
-      return
-    }
+    if (accepted.length === 0) { setExtractionReview([]); return }
     setTokens((prev) => {
       const next = { ...prev }
-      for (const r of accepted) {
-        ;(next as Record<string, string>)[r.token] = r.newValue
-      }
+      for (const r of accepted) (next as Record<string, string>)[r.token] = r.newValue
       return next
     })
-    setSaveMessage(`Applied ${accepted.length} extracted token${accepted.length === 1 ? '' : 's'} — click Save Brand Kit to persist`)
-    setTimeout(() => setSaveMessage(null), 5000)
+    toast.success(`Applied ${accepted.length} token${accepted.length === 1 ? '' : 's'} — click Save to persist`)
     setExtractionReview([])
   }
 
   const handleChatSend = async () => {
     if (!chatInput.trim()) return
-
     setChatLoading(true)
     try {
       const res = await fetch(`/api/clients/${clientId}/brand-kit/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: chatInput,
-          currentTokens: tokens,
-        }),
+        body: JSON.stringify({ message: chatInput, currentTokens: tokens }),
       })
-
       if (res.ok) {
         const data = await res.json()
         setChatMessages((prev) => [
@@ -381,447 +303,342 @@ export default function BrandStudioClient({
         setChatInput('')
       }
     } catch (err) {
-      alert('Chat error: ' + (err instanceof Error ? err.message : String(err)))
+      toast.error('Chat error: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setChatLoading(false)
     }
   }
 
   const applyChatChanges = (changes: TokenChange[]) => {
-    changes.forEach((change) => {
-      handleTokenChange(change.token, change.after)
-    })
+    changes.forEach((change) => handleTokenChange(change.token, change.after))
   }
 
   const handleSaveBrandKit = async () => {
     setSaving(true)
-    setSaveMessage(null)
     try {
       const res = await fetch(`/api/clients/${clientId}/brand-kit`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: 'custom',
-          ...tokens,
-        }),
+        body: JSON.stringify({ mode: 'custom', ...tokens }),
       })
-
       if (res.ok) {
-        setSaveMessage('Brand kit saved successfully!')
-        setTimeout(() => setSaveMessage(null), 3000)
+        toast.success('Brand kit saved')
       } else {
         const error = await res.json()
-        setSaveMessage(`Error: ${error.error}`)
+        toast.error(`Save failed: ${error.error}`)
       }
     } catch (err) {
-      setSaveMessage('Save error: ' + (err instanceof Error ? err.message : String(err)))
+      toast.error('Save error: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setSaving(false)
     }
   }
 
+  const colorRows = [
+    { key: 'primaryColor', label: 'Primary' },
+    { key: 'secondaryColor', label: 'Secondary' },
+    { key: 'bgColor', label: 'Background' },
+    { key: 'accentColor', label: 'Accent' },
+    { key: 'textColor', label: 'Text' },
+  ] as const
+
   return (
-    <main className={styles.main}>
-      <Container>
-        <div className={styles.header}>
-          <h1 className={styles.title}>{clientName} — Brand Studio</h1>
-          <button
-            onClick={handleSaveBrandKit}
-            disabled={saving}
-            className={styles.saveButton}
-          >
-            {saving ? 'Saving...' : 'Save Brand Kit'}
-          </button>
-        </div>
+    <div className={styles.wrapper}>
+      {/* Top bar */}
+      <div className={styles.topBar}>
+        <a href={`/clients/${clientId}`} className={styles.backLink}>← {clientName}</a>
+        <h1 className={styles.topBarTitle}>Brand Studio</h1>
+        <button onClick={handleSaveBrandKit} disabled={saving} className={styles.saveBtn}>
+          {saving ? 'Saving…' : 'Save Brand Kit'}
+        </button>
+      </div>
 
-        {saveMessage && <div className={styles.message}>{saveMessage}</div>}
+      <div className={styles.body}>
+        {/* ── Left sidebar ── */}
+        <div className={styles.sidebar}>
 
-        <div className={styles.container}>
-          {/* Token Editor */}
-          <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>Token Editor</h2>
-
-            <div className={styles.tokenGroup}>
-              <h3 className={styles.tokenGroupTitle}>Colors</h3>
-              <div className={styles.tokenRow}>
-                <label>Primary</label>
+          {/* Colors */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Colors</h2>
+            {colorRows.map(({ key, label }) => (
+              <div key={key} className={styles.colorRow}>
                 <input
                   type="color"
-                  value={tokens.primaryColor}
-                  onChange={(e) => handleTokenChange('primaryColor', e.target.value)}
+                  value={tokens[key]}
+                  onChange={(e) => handleTokenChange(key, e.target.value)}
+                  className={styles.colorSwatch}
                 />
+                <span className={styles.colorLabel}>{label}</span>
                 <input
                   type="text"
-                  value={tokens.primaryColor}
-                  onChange={(e) => handleTokenChange('primaryColor', e.target.value)}
-                  className={styles.tokenInput}
+                  value={tokens[key]}
+                  onChange={(e) => handleTokenChange(key, e.target.value)}
+                  className={styles.colorHex}
+                  spellCheck={false}
                 />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Secondary</label>
-                <input
-                  type="color"
-                  value={tokens.secondaryColor}
-                  onChange={(e) => handleTokenChange('secondaryColor', e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={tokens.secondaryColor}
-                  onChange={(e) => handleTokenChange('secondaryColor', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Background</label>
-                <input
-                  type="color"
-                  value={tokens.bgColor}
-                  onChange={(e) => handleTokenChange('bgColor', e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={tokens.bgColor}
-                  onChange={(e) => handleTokenChange('bgColor', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Accent</label>
-                <input
-                  type="color"
-                  value={tokens.accentColor}
-                  onChange={(e) => handleTokenChange('accentColor', e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={tokens.accentColor}
-                  onChange={(e) => handleTokenChange('accentColor', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Text</label>
-                <input
-                  type="color"
-                  value={tokens.textColor}
-                  onChange={(e) => handleTokenChange('textColor', e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={tokens.textColor}
-                  onChange={(e) => handleTokenChange('textColor', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-            </div>
-
-            <div className={styles.tokenGroup}>
-              <h3 className={styles.tokenGroupTitle}>Fonts</h3>
-              <div className={styles.tokenRow}>
-                <label>Heading Font</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Instrument Serif"
-                  value={tokens.fontHeadingName}
-                  onChange={(e) => handleTokenChange('fontHeadingName', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Body Font</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Plus Jakarta Sans"
-                  value={tokens.fontBodyName}
-                  onChange={(e) => handleTokenChange('fontBodyName', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-            </div>
-
-            <div className={styles.tokenGroup}>
-              <h3 className={styles.tokenGroupTitle}>Typography</h3>
-              <div className={styles.tokenRow}>
-                <label>Heading Size</label>
-                <input
-                  type="text"
-                  placeholder="e.g., 22px"
-                  value={tokens.headingFontSize}
-                  onChange={(e) => handleTokenChange('headingFontSize', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Body Size</label>
-                <input
-                  type="text"
-                  placeholder="e.g., 13px"
-                  value={tokens.bodyFontSize}
-                  onChange={(e) => handleTokenChange('bodyFontSize', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-            </div>
-
-            <div className={styles.tokenGroup}>
-              <h3 className={styles.tokenGroupTitle}>Layout</h3>
-              <div className={styles.tokenRow}>
-                <label>Border Radius</label>
-                <input
-                  type="text"
-                  placeholder="e.g., 6px"
-                  value={tokens.cardBorderRadius}
-                  onChange={(e) => handleTokenChange('cardBorderRadius', e.target.value)}
-                  className={styles.tokenInput}
-                />
-              </div>
-              <div className={styles.tokenRow}>
-                <label>Density</label>
-                <select
-                  value={tokens.layoutDensity}
-                  onChange={(e) => handleTokenChange('layoutDensity', e.target.value)}
-                  className={styles.tokenInput}
-                >
-                  <option value="compact">Compact</option>
-                  <option value="normal">Normal</option>
-                  <option value="airy">Airy</option>
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.tokenGroup}>
-              <h3 className={styles.tokenGroupTitle}>Assets</h3>
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '6px' }}>Logo</div>
-                {logoUrl && (
-                  <img
-                    src={logoUrl}
-                    alt="Logo"
-                    style={{ maxHeight: '48px', maxWidth: '120px', display: 'block', marginBottom: '8px', borderRadius: '4px', border: '1px solid var(--borderLight)' }}
-                  />
-                )}
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handleLogoUpload}
-                />
-                <button
-                  onClick={() => logoInputRef.current?.click()}
-                  disabled={uploadingLogo}
-                  style={{ fontSize: '0.8rem', padding: '5px 12px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '4px', background: 'transparent', color: 'var(--text)' }}
-                >
-                  {uploadingLogo ? 'Uploading...' : logoUrl ? 'Replace Logo' : 'Upload Logo'}
-                </button>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '6px' }}>Font Files</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text)', minWidth: '56px' }}>Heading:</span>
-                  <span style={{ fontSize: '0.75rem', color: fontHeadingUrl ? 'var(--text)' : '#999', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {fontHeadingUrl ? fontHeadingUrl.split('/').pop() : 'None'}
-                  </span>
-                  <input
-                    ref={fontHeadingInputRef}
-                    type="file"
-                    accept=".woff2,.woff,.ttf,.otf"
-                    style={{ display: 'none' }}
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFontUpload('heading', f) }}
-                  />
-                  <button
-                    onClick={() => fontHeadingInputRef.current?.click()}
-                    disabled={uploadingFont === 'heading'}
-                    style={{ fontSize: '0.75rem', padding: '3px 8px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '4px', background: 'transparent', color: 'var(--text)', whiteSpace: 'nowrap' }}
-                  >
-                    {uploadingFont === 'heading' ? '...' : 'Upload'}
-                  </button>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text)', minWidth: '56px' }}>Body:</span>
-                  <span style={{ fontSize: '0.75rem', color: fontBodyUrl ? 'var(--text)' : '#999', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {fontBodyUrl ? fontBodyUrl.split('/').pop() : 'None'}
-                  </span>
-                  <input
-                    ref={fontBodyInputRef}
-                    type="file"
-                    accept=".woff2,.woff,.ttf,.otf"
-                    style={{ display: 'none' }}
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFontUpload('body', f) }}
-                  />
-                  <button
-                    onClick={() => fontBodyInputRef.current?.click()}
-                    disabled={uploadingFont === 'body'}
-                    style={{ fontSize: '0.75rem', padding: '3px 8px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '4px', background: 'transparent', color: 'var(--text)', whiteSpace: 'nowrap' }}
-                  >
-                    {uploadingFont === 'body' ? '...' : 'Upload'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Panel: Preview + Extraction + Chat */}
-          <div className={styles.rightPanel}>
-            {/* Live Preview */}
-            <div className={styles.previewSection}>
-              <h2 className={styles.panelTitle}>Newsletter Preview</h2>
-              <div
-                className={styles.previewContainer}
-                style={{
-                  '--brand-primary': tokens.primaryColor,
-                  '--brand-secondary': tokens.secondaryColor,
-                  '--brand-bg': tokens.bgColor,
-                  '--brand-accent': tokens.accentColor,
-                  '--brand-text': tokens.textColor,
-                  '--font-heading': tokens.fontHeadingName || 'Georgia, serif',
-                  '--font-body': tokens.fontBodyName || 'system-ui, sans-serif',
-                  '--brand-heading-size': tokens.headingFontSize,
-                  '--brand-body-size': tokens.bodyFontSize,
-                  '--brand-radius': tokens.cardBorderRadius,
-                } as React.CSSProperties}
-              >
-                <div className={styles.previewPlaceholder}>
-                  Newsletter preview
-                  {tokens.fontHeadingName && ` • Heading: ${tokens.fontHeadingName}`}
-                  {tokens.fontBodyName && ` • Body: ${tokens.fontBodyName}`}
-                </div>
-              </div>
-            </div>
-
-            {/* PDF Extraction */}
-            <div className={styles.extractionSection}>
-              <h3 className={styles.panelTitle}>PDF Extraction</h3>
-              {uploadStep && (
-                <div className={styles.uploadStatus}>{uploadStep}</div>
-              )}
-              {extractionError && (
-                <div className={styles.extractionError}>{extractionError}</div>
-              )}
-              {extractionReview.length === 0 ? (
-                <div className={styles.uploadArea}>
-                  <input
-                    ref={pdfInputRef}
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    onChange={handlePdfUpload}
-                    style={{ display: 'none' }}
-                    disabled={extracting}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => pdfInputRef.current?.click()}
-                    disabled={extracting}
-                    className={styles.extractButton}
-                  >
-                    {extracting ? 'Processing…' : pdfUrl ? 'Re-upload PDF to extract again' : 'Upload Brand Guidelines PDF'}
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.reviewSection}>
-                  <h4 className={styles.reviewTitle}>Token Review</h4>
-                  {extractionReview.map((review) => (
-                    <div key={review.token} className={styles.reviewItem}>
-                      <div className={styles.reviewHeader}>
-                        <span className={styles.reviewToken}>{review.token}</span>
-                        <span className={styles.reviewConfidence}>
-                          {Math.round(review.confidence * 100)}%
-                        </span>
-                      </div>
-                      <div className={styles.reviewValues}>
-                        {review.oldValue} → {review.newValue}
-                      </div>
-                      <div className={styles.reviewActions}>
-                        <button
-                          onClick={() =>
-                            setExtractionReview((prev) =>
-                              prev.map((r) =>
-                                r.token === review.token ? { ...r, accepted: !r.accepted } : r
-                              )
-                            )
-                          }
-                          className={review.accepted ? styles.buttonAccept : styles.buttonSkip}
-                        >
-                          {review.accepted ? '✓ Accept' : '✗ Skip'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <div className={styles.reviewActions}>
-                    <button onClick={applySelectedExtraction} className={styles.applyButton}>
-                      Apply Selected
-                    </button>
-                    <button
-                      onClick={() => setExtractionReview([])}
-                      className={styles.discardButton}
-                    >
-                      Discard All
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Chat Section */}
-        <div className={styles.chatSection}>
-          <h2 className={styles.panelTitle}>Design Assistant</h2>
-          <div className={styles.chatMessages}>
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} className={`${styles.chatMessage} ${styles[msg.role]}`}>
-                <p>{msg.content}</p>
-                {msg.changes && msg.changes.length > 0 && (
-                  <div className={styles.chatChanges}>
-                    {msg.changes.map((change) => (
-                      <div key={change.token} className={styles.changeCard}>
-                        <div className={styles.changeHeader}>
-                          <span className={styles.changeToken}>{change.token}</span>
-                          <span className={styles.changeReason}>{change.reason}</span>
-                        </div>
-                        <div className={styles.changeValues}>
-                          {change.before} → {change.after}
-                        </div>
-                        <button
-                          onClick={() => applyChatChanges([change])}
-                          className={styles.applyChangeButton}
-                        >
-                          Apply
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => applyChatChanges(msg.changes!)}
-                      className={styles.applyAllButton}
-                    >
-                      Apply All Changes
-                    </button>
-                  </div>
-                )}
               </div>
             ))}
-            <div ref={chatEndRef} />
-          </div>
-          <div className={styles.chatInput}>
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleChatSend()
-                }
-              }}
-              placeholder="Ask the design assistant..."
-              disabled={chatLoading}
-            />
-            <button onClick={handleChatSend} disabled={chatLoading}>
-              {chatLoading ? '...' : 'Send'}
-            </button>
-          </div>
+          </section>
+
+          {/* Logo */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Logo</h2>
+            <div className={styles.logoDrop} onClick={() => logoInputRef.current?.click()}>
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className={styles.logoPreview} />
+              ) : (
+                <span className={styles.logoHint}>
+                  Click to upload · paste image (⌘V)
+                </span>
+              )}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleLogoUpload}
+              />
+            </div>
+            {uploadingLogo && <p className={styles.hint}>Uploading…</p>}
+            {logoUrl && (
+              <button
+                onClick={() => logoInputRef.current?.click()}
+                className={styles.replaceBtn}
+                disabled={uploadingLogo}
+              >
+                Replace logo
+              </button>
+            )}
+          </section>
+
+          {/* Fonts */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Fonts</h2>
+            <div className={styles.fontGroup}>
+              <span className={styles.fontGroupLabel}>Heading</span>
+              <input
+                type="text"
+                placeholder="e.g. Instrument Serif"
+                value={tokens.fontHeadingName}
+                onChange={(e) => handleTokenChange('fontHeadingName', e.target.value)}
+                className={styles.fontInput}
+              />
+              <div className={styles.fontFileRow}>
+                <span className={styles.fontFileName}>
+                  {fontHeadingUrl ? fontHeadingUrl.split('/').pop() : 'No file uploaded'}
+                </span>
+                <button
+                  onClick={() => fontHeadingInputRef.current?.click()}
+                  disabled={uploadingFont === 'heading'}
+                  className={styles.uploadBtn}
+                >
+                  {uploadingFont === 'heading' ? '…' : 'Upload file'}
+                </button>
+                <input
+                  ref={fontHeadingInputRef}
+                  type="file"
+                  accept=".woff2,.woff,.ttf,.otf"
+                  style={{ display: 'none' }}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFontUpload('heading', f) }}
+                />
+              </div>
+            </div>
+            <div className={styles.fontGroup}>
+              <span className={styles.fontGroupLabel}>Body</span>
+              <input
+                type="text"
+                placeholder="e.g. Plus Jakarta Sans"
+                value={tokens.fontBodyName}
+                onChange={(e) => handleTokenChange('fontBodyName', e.target.value)}
+                className={styles.fontInput}
+              />
+              <div className={styles.fontFileRow}>
+                <span className={styles.fontFileName}>
+                  {fontBodyUrl ? fontBodyUrl.split('/').pop() : 'No file uploaded'}
+                </span>
+                <button
+                  onClick={() => fontBodyInputRef.current?.click()}
+                  disabled={uploadingFont === 'body'}
+                  className={styles.uploadBtn}
+                >
+                  {uploadingFont === 'body' ? '…' : 'Upload file'}
+                </button>
+                <input
+                  ref={fontBodyInputRef}
+                  type="file"
+                  accept=".woff2,.woff,.ttf,.otf"
+                  style={{ display: 'none' }}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFontUpload('body', f) }}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Typography & Layout */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Typography & Layout</h2>
+            {[
+              { key: 'headingFontSize', label: 'Heading size', placeholder: '22px' },
+              { key: 'bodyFontSize', label: 'Body size', placeholder: '13px' },
+              { key: 'cardBorderRadius', label: 'Border radius', placeholder: '6px' },
+            ].map(({ key, label, placeholder }) => (
+              <div key={key} className={styles.fieldRow}>
+                <label className={styles.fieldLabel}>{label}</label>
+                <input
+                  type="text"
+                  placeholder={placeholder}
+                  value={(tokens as Record<string, string>)[key]}
+                  onChange={(e) => handleTokenChange(key, e.target.value)}
+                  className={styles.fieldInput}
+                />
+              </div>
+            ))}
+            <div className={styles.fieldRow}>
+              <label className={styles.fieldLabel}>Density</label>
+              <select
+                value={tokens.layoutDensity}
+                onChange={(e) => handleTokenChange('layoutDensity', e.target.value)}
+                className={styles.fieldInput}
+              >
+                <option value="compact">Compact</option>
+                <option value="normal">Normal</option>
+                <option value="airy">Airy</option>
+              </select>
+            </div>
+          </section>
+
         </div>
-      </Container>
-    </main>
+
+        {/* ── Right main panel ── */}
+        <div className={styles.main}>
+
+          {/* Color palette preview */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Palette Preview</h2>
+            <div className={styles.palette}>
+              {colorRows.map(({ key, label }) => (
+                <div key={key} className={styles.chip}>
+                  <div className={styles.chipColor} style={{ background: tokens[key] }} />
+                  <span className={styles.chipLabel}>{label}</span>
+                  <span className={styles.chipHex}>{tokens[key]}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* PDF Extraction */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Extract from Brand Guidelines PDF</h2>
+            {uploadStep && <div className={styles.infoBox}>{uploadStep}</div>}
+            {extractionError && <div className={styles.errorBox}>{extractionError}</div>}
+            {extractionReview.length === 0 ? (
+              <div className={styles.uploadArea}>
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handlePdfUpload}
+                  style={{ display: 'none' }}
+                  disabled={extracting}
+                />
+                <button
+                  type="button"
+                  onClick={() => pdfInputRef.current?.click()}
+                  disabled={extracting}
+                  className={styles.extractBtn}
+                >
+                  {extracting ? 'Processing…' : pdfUrl ? 'Re-upload PDF' : 'Upload Brand Guidelines PDF'}
+                </button>
+                <p className={styles.uploadHint}>
+                  Upload a PDF to automatically extract colours and fonts
+                </p>
+              </div>
+            ) : (
+              <div className={styles.reviewList}>
+                {extractionReview.map((review) => (
+                  <div key={review.token} className={styles.reviewItem}>
+                    <div className={styles.reviewMeta}>
+                      <span className={styles.reviewToken}>{review.token}</span>
+                      <span className={styles.reviewConf}>{Math.round(review.confidence * 100)}%</span>
+                    </div>
+                    <div className={styles.reviewValues}>{review.oldValue} → {review.newValue}</div>
+                    <button
+                      onClick={() => setExtractionReview((prev) =>
+                        prev.map((r) => r.token === review.token ? { ...r, accepted: !r.accepted } : r)
+                      )}
+                      className={review.accepted ? styles.btnAccept : styles.btnSkip}
+                    >
+                      {review.accepted ? '✓ Accept' : 'Skip'}
+                    </button>
+                  </div>
+                ))}
+                <div className={styles.reviewFooter}>
+                  <button onClick={applySelectedExtraction} className={styles.btnApply}>Apply Selected</button>
+                  <button onClick={() => setExtractionReview([])} className={styles.btnDiscard}>Discard All</button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Design Assistant */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Design Assistant</h2>
+            <div className={styles.chatMessages}>
+              {chatMessages.length === 0 && (
+                <p className={styles.chatEmpty}>
+                  Ask the assistant to adjust colours, suggest fonts, or describe the look you're going for.
+                </p>
+              )}
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`${styles.chatMsg} ${msg.role === 'user' ? styles.chatUser : styles.chatAssistant}`}
+                >
+                  <p className={styles.chatText}>{msg.content}</p>
+                  {msg.changes && msg.changes.length > 0 && (
+                    <div className={styles.changeList}>
+                      {msg.changes.map((change) => (
+                        <div key={change.token} className={styles.changeItem}>
+                          <div className={styles.changeTop}>
+                            <span className={styles.changeToken}>{change.token}</span>
+                            <span className={styles.changeReason}>{change.reason}</span>
+                          </div>
+                          <div className={styles.changeVals}>{change.before} → {change.after}</div>
+                          <button
+                            onClick={() => applyChatChanges([change])}
+                            className={styles.applyChangeBtn}
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      ))}
+                      <button onClick={() => applyChatChanges(msg.changes!)} className={styles.applyAllBtn}>
+                        Apply All
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+            <div className={styles.chatInputRow}>
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleChatSend() } }}
+                placeholder="Ask the design assistant…"
+                disabled={chatLoading}
+                className={styles.chatInput}
+              />
+              <button onClick={handleChatSend} disabled={chatLoading} className={styles.chatSendBtn}>
+                {chatLoading ? '…' : 'Send'}
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
   )
 }
