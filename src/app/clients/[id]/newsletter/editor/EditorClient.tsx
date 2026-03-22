@@ -988,6 +988,7 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
                           className={styles.chatApplyBtn}
                           onClick={() => {
                             setBlocks((prev) => applyOperations(prev, ops, moduleDefs))
+                            setChatOpen(false)
                             toast.success('Changes applied')
                           }}
                         >
