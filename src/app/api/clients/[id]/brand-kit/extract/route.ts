@@ -146,13 +146,14 @@ IMPORTANT: Return ONLY valid JSON. No explanations, markdown, or code blocks.`
 
     const responseText = completion.choices[0]?.message?.content ?? '{}'
 
-    // Parse JSON response
+    // Strip markdown code fences if present, then parse JSON
     let extractedData
     try {
-      extractedData = JSON.parse(responseText)
+      const cleaned = responseText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+      extractedData = JSON.parse(cleaned)
     } catch {
       return NextResponse.json(
-        { error: 'Failed to parse AI response as JSON' },
+        { error: `Failed to parse AI response as JSON. Raw response: ${responseText.slice(0, 200)}` },
         { status: 500 }
       )
     }
