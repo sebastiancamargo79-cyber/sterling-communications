@@ -453,6 +453,23 @@
   gap: 0.75rem;
 }
 
+/* Palette (design) button in module list */
+.btnPalette {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--muted, #6b7280);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.moduleListItem:hover .btnPalette { opacity: 1; }
+.btnPalette:hover { color: var(--accent, #006938); }
+.btnPaletteActive { opacity: 1; color: var(--accent, #006938); }
+
 /* Drag handle */
 .dragHandle {
   display: inline-flex;

@@ -10,7 +10,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; editionId: string }> }
 ) {
   const { id, editionId } = await params
-  const { rawContent, title } = await req.json() as { rawContent?: string; title?: string }
+  const { rawContent, title, tokenOverrides } = await req.json() as {
+    rawContent?: string
+    title?: string
+    tokenOverrides?: Record<string, string>
+  }
 
   try {
     // Verify edition belongs to client
@@ -23,12 +27,15 @@ export async function PUT(
     }
 
     // Update edition
-    const updateData: Record<string, any> = { updatedAt: new Date() }
+    const updateData: Record<string, unknown> = { updatedAt: new Date() }
     if (rawContent !== undefined) {
       updateData.rawContent = rawContent
     }
     if (title !== undefined) {
       updateData.title = title
+    }
+    if (tokenOverrides !== undefined) {
+      updateData.tokenOverrides = tokenOverrides
     }
 
     const [updated] = await db

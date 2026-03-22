@@ -35,3 +35,17 @@ export function extractModuleBlocks(raw: string): Array<{ name: string; yaml: st
   }
   return blocks
 }
+
+/** Read the __variant__ field from a YAML block string. Returns 'classic' if absent. */
+export function extractVariantFromYaml(yaml: string): string {
+  const { data } = matter(`---\n${yaml}---`)
+  return typeof data.__variant__ === 'string' ? data.__variant__ : 'classic'
+}
+
+/** Set (or remove) the __variant__ field in a YAML block string. */
+export function setVariantInYaml(yaml: string, variant: string | null): string {
+  // Strip any existing __variant__ line
+  const stripped = yaml.replace(/^__variant__:.*\n?/m, '')
+  if (!variant || variant === 'classic') return stripped
+  return `__variant__: ${variant}\n${stripped}`
+}

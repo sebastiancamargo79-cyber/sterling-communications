@@ -1,0 +1,90 @@
+/* DirectorUpdate — alternate: two-column, large pull quote left */
+.heading {
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+  margin: 0 0 2mm;
+  letter-spacing: 0.02em;
+}
+
+.twoCol {
+  display: flex;
+  gap: 6mm;
+  margin-top: 3mm;
+  height: 220mm;
+}
+
+.leftCol {
+  flex: 0 0 38%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 2px solid var(--brand-accent);
+  padding-right: 5mm;
+}
+
+.pullQuote {
+  margin: 0;
+  font-size: 13pt;
+  font-style: italic;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+  line-height: 1.5;
+  border: none;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.pullQuote::before {
+  display: none;
+}
+
+.openQuote {
+  font-size: 40pt;
+  color: var(--brand-accent);
+  font-family: Georgia, serif;
+  line-height: 0.6;
+  display: block;
+  margin-bottom: 2mm;
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+  margin-top: 4mm;
+}
+
+.sigName {
+  font-weight: 700;
+  font-size: 10pt;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+}
+
+.sigTitle {
+  font-size: 8pt;
+  color: #666;
+}
+
+.rightCol {
+  flex: 1;
+  overflow: hidden;
+}
+
+.body {
+  font-size: 10pt;
+  line-height: 1.65;
+  color: var(--brand-text, #10263B);
+}
+
+.body p {
+  margin: 0 0 3mm;
+}
+
+.body strong {
+  color: var(--brand-primary);
+}

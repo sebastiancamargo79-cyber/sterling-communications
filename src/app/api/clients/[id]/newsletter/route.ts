@@ -18,10 +18,14 @@ export async function GET(
     .limit(1)
 
   if (!row) {
-    return NextResponse.json({ rawContent: null, updatedAt: null })
+    return NextResponse.json({ rawContent: null, tokenOverrides: {}, updatedAt: null })
   }
 
-  return NextResponse.json({ rawContent: row.rawContent, updatedAt: row.updatedAt })
+  return NextResponse.json({
+    rawContent: row.rawContent,
+    tokenOverrides: row.tokenOverrides ?? {},
+    updatedAt: row.updatedAt,
+  })
 }
 
 export async function PUT(
@@ -29,7 +33,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { rawContent } = await req.json() as { rawContent: string }
+  const body = await req.json() as { rawContent: string; tokenOverrides?: Record<string, string> }
+  const { rawContent, tokenOverrides } = body
 
   if (typeof rawContent !== 'string') {
     return NextResponse.json({ error: 'rawContent is required' }, { status: 400 })
@@ -37,10 +42,10 @@ export async function PUT(
 
   await db
     .insert(newsletterDrafts)
-    .values({ clientId: id, slug: `client-${id}`, rawContent })
+    .values({ clientId: id, slug: `client-${id}`, rawContent, tokenOverrides: tokenOverrides ?? {} })
     .onConflictDoUpdate({
       target: newsletterDrafts.slug,
-      set: { rawContent, updatedAt: new Date() },
+      set: { rawContent, tokenOverrides: tokenOverrides ?? {}, updatedAt: new Date() },
     })
 
   return NextResponse.json({ ok: true })

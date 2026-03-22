@@ -1,0 +1,97 @@
+/* Events — alternate: vertical list with accent-styled rows */
+.heading {
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+  margin: 0 0 2mm;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  margin-top: 2mm;
+}
+
+.row {
+  display: flex;
+  gap: 4mm;
+  align-items: flex-start;
+  padding: 3mm 3mm 3mm 0;
+  border-bottom: 1px solid #e5e5e0;
+}
+
+.dateBadge {
+  flex: 0 0 18mm;
+  background: var(--brand-primary);
+  color: #fff;
+  border-radius: var(--brand-radius, 4px);
+  text-align: center;
+  padding: 2mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 14mm;
+}
+
+.dateDay {
+  font-size: 14pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  line-height: 1;
+}
+
+.dateMonth {
+  font-size: 7pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.photoBadge {
+  flex: 0 0 18mm;
+  background: var(--brand-accent);
+  color: #fff;
+  border-radius: var(--brand-radius, 4px);
+  text-align: center;
+  padding: 2mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 14mm;
+  font-size: 16pt;
+}
+
+.rowContent {
+  flex: 1;
+}
+
+.eventTitle {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+  margin: 0 0 1mm;
+}
+
+.eventMeta {
+  font-size: 8pt;
+  color: #666;
+  margin: 0 0 1mm;
+}
+
+.eventDesc {
+  font-size: 9pt;
+  color: var(--brand-text, #10263B);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.caption {
+  font-size: 9pt;
+  color: #555;
+  font-style: italic;
+  margin: 0;
+}

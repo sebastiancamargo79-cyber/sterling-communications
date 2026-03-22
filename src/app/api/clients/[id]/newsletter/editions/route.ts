@@ -30,13 +30,18 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { title, rawContent, htmlSnapshot } = await req.json() as { title?: string; rawContent?: string; htmlSnapshot?: string }
+  const { title, rawContent, htmlSnapshot, tokenOverrides } = await req.json() as {
+    title?: string
+    rawContent?: string
+    htmlSnapshot?: string
+    tokenOverrides?: Record<string, string>
+  }
 
-  // If no title provided, generate blank edition
   const accessCode = generateAccessCode()
 
   // Use provided rawContent or get from draft, or use empty string
   let content = rawContent
+  let draftOverrides: Record<string, string> = {}
   if (!content) {
     const [draft] = await db
       .select()
@@ -44,6 +49,7 @@ export async function POST(
       .where(eq(newsletterDrafts.clientId, id))
       .limit(1)
     content = draft?.rawContent ?? ''
+    draftOverrides = (draft?.tokenOverrides as Record<string, string>) ?? {}
   }
 
   const [edition] = await db
@@ -52,6 +58,7 @@ export async function POST(
       clientId: id,
       title: title?.trim() ?? 'Untitled Edition',
       rawContent: content,
+      tokenOverrides: tokenOverrides ?? draftOverrides,
       accessCode,
       htmlSnapshot: htmlSnapshot ?? null,
       updatedAt: new Date(),

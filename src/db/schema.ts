@@ -33,6 +33,7 @@ export const newsletterDrafts = pgTable('newsletter_drafts', {
   clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }).unique(),
   slug: text('slug').notNull().unique(),
   rawContent: text('raw_content').notNull(),
+  tokenOverrides: jsonb('token_overrides').default({}).notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
@@ -41,6 +42,7 @@ export const newsletterEditions = pgTable('newsletter_editions', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   rawContent: text('raw_content').notNull(),
+  tokenOverrides: jsonb('token_overrides').default({}).notNull(),
   accessCode: text('access_code').unique(),
   htmlSnapshot: text('html_snapshot'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

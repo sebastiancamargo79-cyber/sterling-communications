@@ -1,0 +1,106 @@
+/* Tips/Community — alternate: 2-column bullet grid for tips */
+.heading {
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+  margin: 0 0 2mm;
+}
+
+.tipsImageWrap {
+  width: 100%;
+  height: 35mm;
+  overflow: hidden;
+  border-radius: var(--brand-radius, 4px);
+  margin-bottom: 3mm;
+}
+
+.tipsImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bulletGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2mm 6mm;
+  margin-bottom: 3mm;
+}
+
+.bulletItem {
+  font-size: 9.5pt;
+  color: var(--brand-text, #10263B);
+  display: flex;
+  gap: 2mm;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.bullet {
+  color: var(--brand-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0.5mm;
+}
+
+.communityRow {
+  display: flex;
+  gap: 5mm;
+  font-size: 9.5pt;
+  line-height: 1.55;
+  color: var(--brand-text, #10263B);
+}
+
+.communityRow > div {
+  flex: 1;
+}
+
+.communityRow p {
+  margin: 0 0 2mm;
+}
+
+.communityRow strong {
+  color: var(--brand-primary);
+}
+
+.anniversaries {
+  margin-top: 2mm;
+}
+
+.anniversaryHeading {
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-family: var(--font-heading), Georgia, serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 2mm;
+}
+
+.anniversaryTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+
+.anniversaryTable td {
+  padding: 1mm 3mm 1mm 0;
+  vertical-align: top;
+}
+
+.aName {
+  font-weight: 600;
+  color: var(--brand-text, #10263B);
+}
+
+.aYears {
+  color: var(--brand-primary);
+  white-space: nowrap;
+}
+
+.aNote {
+  color: #666;
+  font-style: italic;
+}

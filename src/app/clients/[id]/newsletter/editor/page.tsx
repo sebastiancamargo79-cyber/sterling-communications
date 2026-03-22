@@ -20,6 +20,7 @@ export default async function ClientEditorPage({
   let rawContent = ''
   let clientName = ''
   let finalEditionId = editionId
+  let initialTokenOverrides: Record<string, string> = {}
 
   // Load client name independently
   try {
@@ -63,7 +64,10 @@ export default async function ClientEditorPage({
       const edition = await db.query.newsletterEditions.findFirst({
         where: eq(newsletterEditions.id, finalEditionId),
       })
-      if (edition) rawContent = edition.rawContent
+      if (edition) {
+        rawContent = edition.rawContent
+        initialTokenOverrides = (edition.tokenOverrides as Record<string, string>) ?? {}
+      }
     } catch {
       // fallback to empty
     }
@@ -77,6 +81,7 @@ export default async function ClientEditorPage({
         .limit(1)
       if (row) {
         rawContent = row.rawContent
+        initialTokenOverrides = (row.tokenOverrides as Record<string, string>) ?? {}
       } else if (clientName) {
         rawContent = generateTemplate(clientName)
       }
@@ -90,6 +95,7 @@ export default async function ClientEditorPage({
   return (
     <EditorClient
       initialContent={rawContent}
+      initialTokenOverrides={initialTokenOverrides}
       clientId={id}
       clientName={clientName}
       editionId={finalEditionId}

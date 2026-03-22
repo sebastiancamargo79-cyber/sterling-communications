@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 import { type ModuleDef } from '@/lib/module-registry'
-import { extractModuleBlocks, serializeModuleArray } from '@/lib/module-parser'
+import { extractModuleBlocks, serializeModuleArray, extractVariantFromYaml, setVariantInYaml } from '@/lib/module-parser'
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import ArrayFieldEditor from '@/components/ArrayFieldEditor'
 import EventFieldEditor from '@/components/EventFieldEditor'
+import ModuleDesignOverlay from './ModuleDesignOverlay'
 import styles from './editor.module.css'
 
 interface ModuleBlock {
@@ -22,6 +23,7 @@ interface ModuleBlock {
 
 interface Props {
   initialContent: string
+  initialTokenOverrides: Record<string, string>
   clientId: string
   clientName: string
   editionId?: string
@@ -316,13 +318,17 @@ function SortableModuleListItem({
   block,
   moduleDefs,
   isActive,
+  isDesignOpen,
   onClick,
+  onOpenDesign,
   sortableId,
 }: {
   block: ModuleBlock
   moduleDefs: ModuleDef[]
   isActive: boolean
+  isDesignOpen: boolean
   onClick: () => void
+  onOpenDesign: () => void
   sortableId: string
 }) {
   const def = getModuleDef(block.name, moduleDefs)
@@ -349,6 +355,13 @@ function SortableModuleListItem({
       </span>
       <span style={{ flex: 1 }}>{def?.label ?? block.name}</span>
       {block.generating && <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>…</span>}
+      <button
+        className={`${styles.btnPalette} ${isDesignOpen ? styles.btnPaletteActive : ''}`}
+        title="Design assistant"
+        onClick={(e) => { e.stopPropagation(); onOpenDesign() }}
+      >
+        🎨
+      </button>
     </div>
   )
 }
@@ -484,7 +497,7 @@ function ModuleFields({
   )
 }
 
-export default function EditorClient({ initialContent, clientId, clientName, editionId, moduleDefs }: Props) {
+export default function EditorClient({ initialContent, initialTokenOverrides, clientId, clientName, editionId, moduleDefs }: Props) {
   const router = useRouter()
   const [blocks, setBlocks] = useState<ModuleBlock[]>(() => {
     const parsed = extractModuleBlocks(initialContent)
@@ -495,6 +508,8 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
       .map((m) => ({ name: m.name, yaml: '', brief: '', generating: false }))
     return [...requiredMissing, ...parsed]
   })
+  const [tokenOverrides, setTokenOverrides] = useState<Record<string, string>>(initialTokenOverrides)
+  const [designOverlayModule, setDesignOverlayModule] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
@@ -586,7 +601,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
       const res = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawContent }),
+        body: JSON.stringify({ rawContent, tokenOverrides }),
       })
       if (!res.ok) throw new Error('Save failed')
       toast.success('Draft saved')
@@ -595,7 +610,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
     } finally {
       setSaving(false)
     }
-  }, [blocks, clientId, editionId])
+  }, [blocks, clientId, editionId, tokenOverrides])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -617,6 +632,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     setSaveStatus('saving')
     const snapshot = blocks
+    const overridesSnapshot = tokenOverrides
     const eid = editionId
     const cid = clientId
     saveTimeoutRef.current = setTimeout(async () => {
@@ -628,7 +644,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
         const res = await fetch(endpoint, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rawContent }),
+          body: JSON.stringify({ rawContent, tokenOverrides: overridesSnapshot }),
         })
         if (!res.ok) throw new Error('Save failed')
         setSaveStatus('saved')
@@ -639,7 +655,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
       }
     }, 2000)
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current) }
-  }, [blocks, clientId, editionId])
+  }, [blocks, clientId, editionId, tokenOverrides])
 
   const previewHref = editionId
     ? `/clients/${clientId}/newsletter/preview?editionId=${editionId}`
@@ -659,7 +675,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
       await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawContent }),
+        body: JSON.stringify({ rawContent, tokenOverrides }),
       })
       setSaveStatus('saved')
       setLastSaved(new Date())
@@ -667,7 +683,7 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
       // Non-fatal — navigate anyway
     }
     router.push(previewHref)
-  }, [blocks, clientId, editionId, previewHref, router])
+  }, [blocks, clientId, editionId, previewHref, router, tokenOverrides])
 
   const handleSaveEdition = async () => {
     if (!editionTitle.trim()) return
@@ -755,7 +771,11 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
                     block={block}
                     moduleDefs={moduleDefs}
                     isActive={block.name === selectedModuleName}
+                    isDesignOpen={block.name === designOverlayModule}
                     onClick={() => setSelectedModuleName(block.name)}
+                    onOpenDesign={() => setDesignOverlayModule(
+                      designOverlayModule === block.name ? null : block.name
+                    )}
                     sortableId={block.name}
                   />
                 ))}
@@ -804,6 +824,47 @@ export default function EditorClient({ initialContent, clientId, clientName, edi
           )}
         </div>
       </div>
+
+      {/* Design overlay */}
+      {designOverlayModule && (() => {
+        const overlayBlock = blocks.find((b) => b.name === designOverlayModule)
+        const overlayDef = getModuleDef(designOverlayModule, moduleDefs)
+        if (!overlayBlock) return null
+        return (
+          <ModuleDesignOverlay
+            key={designOverlayModule}
+            moduleType={designOverlayModule}
+            moduleLabel={overlayDef?.label ?? designOverlayModule}
+            moduleYaml={overlayBlock.yaml}
+            clientId={clientId}
+            editionOverrides={tokenOverrides}
+            currentVariant={extractVariantFromYaml(overlayBlock.yaml)}
+            onClose={() => setDesignOverlayModule(null)}
+            onApplyToken={(token, value, scope) => {
+              if (scope === 'global') {
+                // Update brand kit globally
+                fetch(`/api/clients/${clientId}/brand-kit`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ [token]: value }),
+                }).catch(() => {})
+                toast.success(`Brand token ${token} updated globally`)
+              } else {
+                setTokenOverrides((prev) => ({ ...prev, [token]: value }))
+                toast.success(`Design override applied`)
+              }
+            }}
+            onApplyVariant={(variant) => {
+              const blockIdx = blocks.findIndex((b) => b.name === designOverlayModule)
+              if (blockIdx >= 0) {
+                const newYaml = setVariantInYaml(blocks[blockIdx].yaml, variant === 'classic' ? null : variant)
+                updateBlock(blockIdx, { yaml: newYaml })
+                toast.success(`Layout switched to ${variant}`)
+              }
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }
