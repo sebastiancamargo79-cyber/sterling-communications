@@ -1,11 +1,17 @@
 import { redirect } from 'next/navigation'
 import { db } from '@/db'
 import { newsletterDrafts, clients, newsletterEditions } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { getAllModuleDefs, generateTemplate } from '@/lib/module-registry'
 import EditorClient from './EditorClient'
 
 export const dynamic = 'force-dynamic'
+
+/** Update the month field in existing rawContent so new editions start with the current month. */
+function refreshMonth(content: string): string {
+  const month = new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+  return content.replace(/^month: ".*"$/m, `month: "${month}"`)
+}
 
 export default async function ClientEditorPage({
   params,
@@ -21,6 +27,7 @@ export default async function ClientEditorPage({
   let clientName = ''
   let finalEditionId = editionId
   let initialTokenOverrides: Record<string, string> = {}
+  let initialEditionTitle = 'Untitled Edition'
 
   // Load client name independently
   try {
@@ -35,7 +42,39 @@ export default async function ClientEditorPage({
   }
 
   if (!editionId) {
-    // Create a blank edition — redirect must happen OUTSIDE try/catch so Next.js
+    // Build starter content from most recent edition or draft so per-client
+    // info (office name, phone, website) carries over automatically.
+    let starterContent = ''
+    try {
+      const [prevEdition] = await db
+        .select({ rawContent: newsletterEditions.rawContent })
+        .from(newsletterEditions)
+        .where(eq(newsletterEditions.clientId, id))
+        .orderBy(desc(newsletterEditions.createdAt))
+        .limit(1)
+      if (prevEdition?.rawContent) {
+        starterContent = refreshMonth(prevEdition.rawContent)
+      }
+    } catch { /* non-critical */ }
+
+    if (!starterContent) {
+      try {
+        const [draft] = await db
+          .select({ rawContent: newsletterDrafts.rawContent })
+          .from(newsletterDrafts)
+          .where(eq(newsletterDrafts.clientId, id))
+          .limit(1)
+        if (draft?.rawContent) {
+          starterContent = refreshMonth(draft.rawContent)
+        }
+      } catch { /* non-critical */ }
+    }
+
+    if (!starterContent) {
+      starterContent = generateTemplate(clientName)
+    }
+
+    // Create a new edition — redirect must happen OUTSIDE try/catch so Next.js
     // can propagate the NEXT_REDIRECT and not swallow it
     let newEditionId: string | undefined
     try {
@@ -44,7 +83,7 @@ export default async function ClientEditorPage({
         .values({
           clientId: id,
           title: 'Untitled Edition',
-          rawContent: '',
+          rawContent: starterContent,
           updatedAt: new Date(),
         })
         .returning()
@@ -67,6 +106,7 @@ export default async function ClientEditorPage({
       if (edition) {
         rawContent = edition.rawContent
         initialTokenOverrides = (edition.tokenOverrides as Record<string, string>) ?? {}
+        initialEditionTitle = edition.title
       }
     } catch {
       // fallback to empty
@@ -99,6 +139,7 @@ export default async function ClientEditorPage({
       clientId={id}
       clientName={clientName}
       editionId={finalEditionId}
+      editionTitle={initialEditionTitle}
       moduleDefs={moduleDefs}
     />
   )

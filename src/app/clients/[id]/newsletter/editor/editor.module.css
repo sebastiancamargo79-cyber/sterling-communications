@@ -28,6 +28,40 @@
   gap: 1rem;
 }
 
+.editionTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.editionTitleLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.45);
+  line-height: 1;
+}
+
+.editionTitleInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.1rem 0.2rem;
+  outline: none;
+  min-width: 180px;
+  max-width: 340px;
+  font-family: inherit;
+}
+.editionTitleInput:focus {
+  border-bottom-color: var(--accent);
+}
+.editionTitleInput::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
 .backLink {
   font-size: 0.85rem;
   color: rgba(255,255,255,0.7);

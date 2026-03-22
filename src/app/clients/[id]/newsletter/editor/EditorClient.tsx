@@ -27,6 +27,7 @@ interface Props {
   clientId: string
   clientName: string
   editionId?: string
+  editionTitle?: string
   moduleDefs: ModuleDef[]
 }
 
@@ -497,8 +498,9 @@ function ModuleFields({
   )
 }
 
-export default function EditorClient({ initialContent, initialTokenOverrides, clientId, clientName, editionId, moduleDefs }: Props) {
+export default function EditorClient({ initialContent, initialTokenOverrides, clientId, clientName, editionId, editionTitle, moduleDefs }: Props) {
   const router = useRouter()
+  const [titleValue, setTitleValue] = useState(editionTitle ?? 'Untitled Edition')
   const [blocks, setBlocks] = useState<ModuleBlock[]>(() => {
     const parsed = extractModuleBlocks(initialContent)
       .map((b) => ({ ...b, brief: '', generating: false }))
@@ -521,6 +523,19 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
   const [editionTitle, setEditionTitle] = useState('')
   const [savingEdition, setSavingEdition] = useState(false)
   const [selectedModuleName, setSelectedModuleName] = useState<string | null>(null)
+
+  const saveTitle = useCallback(async (newTitle: string) => {
+    if (!editionId || !newTitle.trim()) return
+    try {
+      await fetch(`/api/clients/${clientId}/newsletter/editions/${editionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle.trim() }),
+      })
+    } catch {
+      toast.error('Failed to save title')
+    }
+  }, [clientId, editionId])
 
   // Keep selectedModuleName valid as blocks change
   useEffect(() => {
@@ -736,7 +751,17 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <a href={`/clients/${clientId}`} className={styles.backLink}>← {clientName || 'Back'}</a>
-          <h1 className={styles.topBarTitle}>Newsletter Editor</h1>
+          <div className={styles.editionTitleWrap}>
+            <span className={styles.editionTitleLabel}>Edition</span>
+            <input
+              className={styles.editionTitleInput}
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={(e) => saveTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur() } }}
+              placeholder="Untitled Edition"
+            />
+          </div>
         </div>
         <div className={styles.topBarActions}>
           {saveStatus === 'saving' && (

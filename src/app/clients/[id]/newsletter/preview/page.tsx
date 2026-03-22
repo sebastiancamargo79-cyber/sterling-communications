@@ -107,11 +107,17 @@ export default async function ClientNewsletterPreview({
       )
     }
     if (err instanceof ZodError) {
+      const editorHref = editionId
+        ? `/clients/${id}/newsletter/editor?editionId=${editionId}`
+        : `/clients/${id}/newsletter/editor`
       return (
         <div className={styles.wrapper}>
+          <div className={styles.printBar}>
+            <a href={editorHref} className={styles.backLink}>&larr; Back to Editor</a>
+          </div>
           <div className={styles.errorBox}>
-            <h1>Newsletter Content Validation Error</h1>
-            <p>The newsletter content contains invalid data. Please fix the following issues:</p>
+            <h1>Some required fields are missing</h1>
+            <p>Please fill in the following fields in the editor and try previewing again:</p>
             <ul>
               {err.errors.map((e, i) => (
                 <li key={i}>
@@ -121,6 +127,11 @@ export default async function ClientNewsletterPreview({
                 </li>
               ))}
             </ul>
+            <p style={{ marginTop: '1.25rem' }}>
+              <a href={editorHref} style={{ color: '#c0392b', fontWeight: 600 }}>
+                &larr; Go back to the editor to fix these
+              </a>
+            </p>
           </div>
         </div>
       )
