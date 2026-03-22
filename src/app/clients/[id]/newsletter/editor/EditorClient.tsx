@@ -514,6 +514,7 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const saveAbortRef = useRef<AbortController | null>(null)
   const isInitialMount = useRef(true)
   const [addingModule, setAddingModule] = useState(false)
   const [editionOpen, setEditionOpen] = useState(false)
@@ -592,6 +593,9 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
 
   const handleSave = useCallback(async () => {
     setSaving(true)
+    saveAbortRef.current?.abort()
+    const ctrl = new AbortController()
+    saveAbortRef.current = ctrl
     try {
       const rawContent = serializeModuleArray(blocks)
       const endpoint = editionId
@@ -602,11 +606,12 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawContent, tokenOverrides }),
+        signal: ctrl.signal,
       })
       if (!res.ok) throw new Error('Save failed')
       toast.success('Draft saved')
-    } catch {
-      toast.error('Failed to save draft')
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') toast.error('Failed to save draft')
     } finally {
       setSaving(false)
     }
@@ -630,12 +635,15 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
       return
     }
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-    setSaveStatus('saving')
     const snapshot = blocks
     const overridesSnapshot = tokenOverrides
     const eid = editionId
     const cid = clientId
     saveTimeoutRef.current = setTimeout(async () => {
+      saveAbortRef.current?.abort()
+      const ctrl = new AbortController()
+      saveAbortRef.current = ctrl
+      setSaveStatus('saving')
       try {
         const rawContent = serializeModuleArray(snapshot)
         const endpoint = eid
@@ -645,11 +653,13 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ rawContent, tokenOverrides: overridesSnapshot }),
+          signal: ctrl.signal,
         })
         if (!res.ok) throw new Error('Save failed')
         setSaveStatus('saved')
         setLastSaved(new Date())
-      } catch {
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return
         setSaveStatus('idle')
         toast.error('Auto-save failed')
       }
@@ -667,6 +677,9 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
       clearTimeout(saveTimeoutRef.current)
       saveTimeoutRef.current = null
     }
+    saveAbortRef.current?.abort()
+    const ctrl = new AbortController()
+    saveAbortRef.current = ctrl
     try {
       const rawContent = serializeModuleArray(blocks)
       const endpoint = editionId
@@ -676,6 +689,7 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawContent, tokenOverrides }),
+        signal: ctrl.signal,
       })
       setSaveStatus('saved')
       setLastSaved(new Date())
