@@ -58,8 +58,17 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
       throw new Error('No text extracted from PDF')
     }
 
-    // Limit to ~4000 chars to avoid huge prompts
-    return text.slice(0, 4000)
+    // Sample from multiple points in the document to avoid getting stuck in the TOC.
+    // Brand specs (hex codes, font names) are usually in the middle/later pages.
+    const len = text.length
+    const chunks = [
+      text.slice(0, 1000),
+      text.slice(Math.floor(len * 0.2), Math.floor(len * 0.2) + 2000),
+      text.slice(Math.floor(len * 0.4), Math.floor(len * 0.4) + 2000),
+      text.slice(Math.floor(len * 0.6), Math.floor(len * 0.6) + 2000),
+      text.slice(Math.floor(len * 0.8), Math.floor(len * 0.8) + 1000),
+    ]
+    return chunks.join('\n\n---\n\n')
   } catch (e) {
     throw new Error(`Failed to parse PDF: ${e instanceof Error ? e.message : String(e)}`)
   }
@@ -97,9 +106,9 @@ export async function POST(
       )
     }
 
-    if (trimmedText.length < 100) {
+    if (trimmedText.length < 80) {
       return NextResponse.json(
-        { error: `PDF text extraction returned only ${trimmedText.length} characters — too little to extract tokens. The PDF may be mostly images. Extracted text: "${trimmedText.slice(0, 200)}"` },
+        { error: `PDF text extraction returned only ${trimmedText.length} characters — the PDF is likely image-based with no selectable text. Extracted text: "${trimmedText.slice(0, 200)}"` },
         { status: 400 }
       )
     }
