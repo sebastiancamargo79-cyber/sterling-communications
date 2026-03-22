@@ -13,7 +13,18 @@ interface Client {
   id: string
   name: string
   createdAt: Date | null
+  editionCount: number
+  lastEditionAt: string | null
   brandKit: { mode: string; primaryColor: string | null; logoUrl: string | null } | null
+}
+
+function timeAgo(dateStr: string): string {
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+  if (days === 0) return 'today'
+  if (days === 1) return '1d ago'
+  if (days < 30) return `${days}d ago`
+  const months = Math.floor(days / 30)
+  return months === 1 ? '1mo ago' : `${months}mo ago`
 }
 
 interface Props {
@@ -85,7 +96,10 @@ export default function ClientsClient({ clients }: Props) {
                       <div>
                         <div className={styles.clientName}>{client.name}</div>
                         <div className={styles.clientMeta}>
-                          {client.brandKit ? client.brandKit.mode : 'No brand kit'}
+                          {client.editionCount === 0
+                            ? 'No editions yet'
+                            : `${client.editionCount} edition${client.editionCount !== 1 ? 's' : ''}${client.lastEditionAt ? ` · ${timeAgo(client.lastEditionAt)}` : ''}`
+                          }
                         </div>
                       </div>
                     </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useParams } from 'next/navigation'
 import {
@@ -8,6 +9,8 @@ import {
 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 import styles from './sidebar.module.css'
+
+interface ClientInfo { name: string; primaryColor: string | null }
 
 const mainNav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +29,19 @@ export default function Sidebar() {
   const pathname = usePathname()
   const params = useParams()
   const { theme, toggle } = useTheme()
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
+
+  const clientId = params?.id as string | undefined
+
+  useEffect(() => {
+    if (!clientId) { setClientInfo(null); return }
+    fetch(`/api/clients/${clientId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setClientInfo({ name: data.client.name, primaryColor: data.brandKit?.primaryColor ?? null })
+      })
+      .catch(() => {})
+  }, [clientId])
 
   if (
     pathname === '/login' ||
@@ -35,7 +51,6 @@ export default function Sidebar() {
     return null
   }
 
-  const clientId = params?.id as string | undefined
   const isClientRoute = !!clientId && pathname.startsWith(`/clients/${clientId}`)
 
   return (
@@ -76,6 +91,17 @@ export default function Sidebar() {
               <ChevronLeft size={13} />
               All Clients
             </Link>
+            {clientInfo && (
+              <div className={styles.clientContext}>
+                <div
+                  className={styles.clientContextAvatar}
+                  style={{ background: clientInfo.primaryColor ?? 'var(--primary)' }}
+                >
+                  {clientInfo.name.charAt(0).toUpperCase()}
+                </div>
+                <span className={styles.clientContextName}>{clientInfo.name}</span>
+              </div>
+            )}
             {subNav(clientId).map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href || pathname.startsWith(item.href + '?')

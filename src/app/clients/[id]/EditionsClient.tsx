@@ -49,7 +49,14 @@ export default function EditionsClientComponent({ clientId, editions }: Props) {
         <tbody>
           {editions.map((edition) => (
             <tr key={edition.id} className={styles.editionRow}>
-              <td className={styles.tdTitle}>{edition.title}</td>
+              <td className={styles.tdTitle}>
+                <div className={styles.titleWithBadge}>
+                  <span>{edition.title}</span>
+                  <span className={edition.htmlSnapshot ? styles.badgePublished : styles.badgeDraft}>
+                    {edition.htmlSnapshot ? 'Published' : 'Draft'}
+                  </span>
+                </div>
+              </td>
               <td className={styles.tdDate}>
                 {new Date(edition.createdAt).toLocaleDateString()}
               </td>

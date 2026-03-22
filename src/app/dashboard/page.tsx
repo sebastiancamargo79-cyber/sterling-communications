@@ -40,6 +40,27 @@ export default async function DashboardPage() {
     .orderBy(desc(clients.createdAt))
     .limit(5)
 
+  const rawMonthly = await db
+    .select({
+      period: sql<string>`to_char(${newsletterEditions.createdAt}, 'YYYY-MM')`,
+      editionCount: sql<number>`count(*)`,
+    })
+    .from(newsletterEditions)
+    .groupBy(sql`to_char(${newsletterEditions.createdAt}, 'YYYY-MM')`)
+    .orderBy(sql`to_char(${newsletterEditions.createdAt}, 'YYYY-MM') desc`)
+    .limit(6) as { period: string; editionCount: number }[]
+
+  const now = new Date()
+  const chartData = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+    const period = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const label = d.toLocaleDateString('en-GB', { month: 'short' })
+    return { period, label, count: 0 }
+  })
+  const byPeriod = new Map(rawMonthly.map(m => [m.period, Number(m.editionCount)]))
+  for (const m of chartData) m.count = byPeriod.get(m.period) ?? 0
+  const chartMax = Math.max(...chartData.map(m => m.count), 1)
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -88,6 +109,30 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Monthly chart */}
+        <section className={styles.chartSection}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2 className={styles.sectionTitle}>Activity</h2>
+              <p className={styles.chartSubtitle}>Editions created by month</p>
+            </div>
+          </div>
+          <div className={styles.chart}>
+            {chartData.map((m) => (
+              <div key={m.period} className={styles.chartCol}>
+                <span className={styles.chartCount}>{m.count > 0 ? m.count : ''}</span>
+                <div className={styles.chartBarWrap}>
+                  <div
+                    className={styles.chartBar}
+                    style={{ height: `${Math.max((m.count / chartMax) * 100, m.count > 0 ? 8 : 4)}%` }}
+                  />
+                </div>
+                <span className={styles.chartLabel}>{m.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Two column section */}
         <div className={styles.grid}>

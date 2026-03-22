@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { ChevronLeft, UserPlus } from 'lucide-react'
 import Container from '@/components/Container'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
@@ -72,8 +73,19 @@ export default function NewClientPage() {
     <main className={styles.main}>
       <Container>
         <div className={styles.header}>
-          <a href="/clients" className={styles.back}>← Clients</a>
-          <h1 className={styles.heading}>Create Client</h1>
+          <a href="/clients" className={styles.back}>
+            <ChevronLeft size={14} />
+            Clients
+          </a>
+          <div className={styles.headerRow}>
+            <div className={styles.headerIcon}>
+              <UserPlus size={20} />
+            </div>
+            <div>
+              <h1 className={styles.heading}>New Client</h1>
+              <p className={styles.subtitle}>Set up brand kit and workspace</p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>

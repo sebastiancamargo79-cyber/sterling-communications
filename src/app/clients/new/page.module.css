@@ -7,23 +7,52 @@
   margin-bottom: 32px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.875rem;
   color: var(--muted);
   text-decoration: none;
+  margin-bottom: 16px;
 }
 
 .back:hover {
   color: var(--text);
 }
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headerIcon {
+  width: 44px;
+  height: 44px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
 .heading {
-  font-size: 2rem;
+  font-size: 1.875rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-top: 2px;
 }
 
 .form {
