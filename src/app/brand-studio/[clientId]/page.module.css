@@ -163,6 +163,16 @@
   gap: 1rem;
 }
 
+.uploadStatus {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  color: #1d4ed8;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 .extractionError {
   background: #fef2f2;
   border: 1px solid #fca5a5;

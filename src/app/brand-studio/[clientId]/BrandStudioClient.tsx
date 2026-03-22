@@ -81,6 +81,7 @@ export default function BrandStudioClient({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [extracting, setExtracting] = useState(false)
   const [extractionError, setExtractionError] = useState<string | null>(null)
+  const [uploadStep, setUploadStep] = useState<string | null>(null)
   const [extractionReview, setExtractionReview] = useState<ExtractionReview[]>([])
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
@@ -132,6 +133,7 @@ export default function BrandStudioClient({
 
     setExtracting(true)
     setExtractionError(null)
+    setUploadStep('Uploading PDF…')
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -143,15 +145,27 @@ export default function BrandStudioClient({
 
       if (!uploadRes.ok) {
         const err = await uploadRes.json().catch(() => ({}))
-        const msg = `Upload failed: ${err.error ?? uploadRes.statusText}`
+        const msg = `Upload failed (${uploadRes.status}): ${err.error ?? uploadRes.statusText}`
         setExtractionError(msg)
+        setUploadStep(null)
         toast.error(msg)
         setExtracting(false)
         return
       }
 
-      const { url } = await uploadRes.json()
+      const uploadJson = await uploadRes.json().catch(() => null)
+      if (!uploadJson?.url) {
+        const msg = 'Upload failed: server returned no URL'
+        setExtractionError(msg)
+        setUploadStep(null)
+        toast.error(msg)
+        setExtracting(false)
+        return
+      }
+
+      const { url } = uploadJson
       setPdfUrl(url)
+      setUploadStep('Extracting brand tokens from PDF…')
 
       // Auto-extract immediately after upload
       const extractRes = await fetch(`/api/clients/${clientId}/brand-kit/extract`, {
@@ -162,18 +176,21 @@ export default function BrandStudioClient({
 
       if (!extractRes.ok) {
         const error = await extractRes.json().catch(() => ({}))
-        const msg = `Extraction failed: ${error.error ?? extractRes.statusText}`
+        const msg = `Extraction failed (${extractRes.status}): ${error.error ?? extractRes.statusText}`
         setExtractionError(msg)
+        setUploadStep(null)
         toast.error(msg)
         setExtracting(false)
         return
       }
 
       const data: ExtractionResponse = await extractRes.json()
+      setUploadStep(null)
       await handleExtractData(data)
     } catch (err) {
       const msg = 'Error: ' + (err instanceof Error ? err.message : String(err))
       setExtractionError(msg)
+      setUploadStep(null)
       toast.error(msg)
     } finally {
       setExtracting(false)
@@ -576,6 +593,9 @@ export default function BrandStudioClient({
             {/* PDF Extraction */}
             <div className={styles.extractionSection}>
               <h3 className={styles.panelTitle}>PDF Extraction</h3>
+              {uploadStep && (
+                <div className={styles.uploadStatus}>{uploadStep}</div>
+              )}
               {extractionError && (
                 <div className={styles.extractionError}>{extractionError}</div>
               )}

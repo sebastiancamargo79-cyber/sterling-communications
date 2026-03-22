@@ -29,11 +29,6 @@ async function downloadPdf(url: string): Promise<Buffer> {
     throw new Error(`Failed to download PDF: ${response.statusText}`)
   }
 
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('pdf')) {
-    throw new Error(`Invalid content type: ${contentType}. Expected PDF.`)
-  }
-
   const arrayBuffer = await response.arrayBuffer()
   if (arrayBuffer.byteLength === 0) {
     throw new Error('Downloaded PDF file is empty')
