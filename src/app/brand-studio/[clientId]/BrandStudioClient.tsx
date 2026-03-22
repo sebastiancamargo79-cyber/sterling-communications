@@ -87,6 +87,7 @@ export default function BrandStudioClient({
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Token state
   const [tokens, setTokens] = useState({
@@ -602,16 +603,26 @@ export default function BrandStudioClient({
               {extractionReview.length === 0 ? (
                 <div className={styles.uploadArea}>
                   <input
+                    ref={fileInputRef}
                     type="file"
-                    accept=".pdf"
+                    accept=".pdf,application/pdf"
                     onChange={handlePdfUpload}
-                    id="pdfInput"
                     style={{ display: 'none' }}
                     disabled={extracting}
                   />
-                  <label htmlFor="pdfInput" className={styles.uploadLabel} style={extracting ? { opacity: 0.6, pointerEvents: 'none' } : {}}>
-                    {extracting ? 'Extracting brand tokens…' : pdfUrl ? 'PDF uploaded — re-upload to extract again' : 'Click to upload brand guidelines PDF'}
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={extracting}
+                    className={styles.extractButton}
+                  >
+                    {extracting ? 'Processing…' : pdfUrl ? 'Re-upload PDF to extract again' : 'Upload Brand Guidelines PDF'}
+                  </button>
+                  {pdfUrl && !extracting && (
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--muted)' }}>
+                      PDF uploaded. Click above to upload a different one.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className={styles.reviewSection}>
