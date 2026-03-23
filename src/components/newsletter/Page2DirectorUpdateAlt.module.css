@@ -67,7 +67,7 @@
 
 .sigTitle {
   font-size: 8pt;
-  color: #666;
+  color: var(--brand-text-muted, #666);
 }
 
 .rightCol {

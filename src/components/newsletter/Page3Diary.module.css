@@ -34,7 +34,7 @@
 
 .caption {
   font-size: 8pt;
-  color: #555;
+  color: var(--brand-text-muted, #555);
   margin: 1.5mm 0 0;
   font-style: italic;
 }
@@ -55,7 +55,7 @@
 
 .eventLocation {
   font-size: 8.5pt;
-  color: #555;
+  color: var(--brand-text-muted, #555);
   margin: 0 0 1mm;
   font-style: italic;
 }

@@ -116,7 +116,7 @@
 }
 
 .anniversaryTable tr {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--brand-divider, #e0e0e0);
 }
 
 .anniversaryTable tr:last-child {
@@ -138,6 +138,6 @@
 
 .aNote {
   padding: 1mm 0 1mm 2mm;
-  color: #555;
+  color: var(--brand-text-muted, #555);
   font-style: italic;
 }

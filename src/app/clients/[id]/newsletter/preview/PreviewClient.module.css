@@ -47,6 +47,32 @@
 }
 .btnUndo:hover { background: #f5f5f5; }
 
+.btnReset {
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #c0392b;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #c0392b;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.btnReset:hover { background: #c0392b; color: #fff; }
+
+.btnPromote {
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #7c3aed;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #7c3aed;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.btnPromote:hover { background: #7c3aed; color: #fff; }
+
 .btnSave {
   font-size: 13px;
   padding: 5px 14px;
@@ -60,6 +86,20 @@
 }
 .btnSave:hover:not(:disabled) { background: #004d28; }
 .btnSave:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btnRedesign {
+  font-size: 13px;
+  padding: 5px 14px;
+  background: #1e3a5f;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+  letter-spacing: 0.01em;
+}
+.btnRedesign:hover { background: #10263B; }
 
 .pages {
   display: flex;

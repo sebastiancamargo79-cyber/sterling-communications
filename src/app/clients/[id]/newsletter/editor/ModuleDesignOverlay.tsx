@@ -112,20 +112,22 @@ export default function ModuleDesignOverlay({
       const data = await res.json() as { message: string; changes: Change[] }
       const changes = data.changes ?? []
 
-      // Auto-apply all suggested changes immediately so preview updates instantly
+      // Auto-apply token changes immediately so the preview updates; variant changes are manual
       for (const change of changes) {
         if (change.type === 'token' && change.token && change.value) {
           onApplyToken(change.token, change.value, change.scope ?? 'edition')
-        } else if (change.type === 'variant' && change.variant) {
-          onApplyVariant(change.variant)
         }
       }
+
+      // Mark only token changes as auto-applied; variant chips stay clickable
+      const autoApplied = new Set<number>()
+      changes.forEach((c, i) => { if (c.type === 'token') autoApplied.add(i) })
 
       const assistantMsg: ChatMessage = {
         role: 'assistant',
         content: data.message,
         changes,
-        appliedIndexes: new Set(changes.map((_, i) => i)),
+        appliedIndexes: autoApplied,
       }
       setHistory((prev) => [...prev, assistantMsg])
     } catch {

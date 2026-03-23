@@ -127,17 +127,21 @@ export default async function ClientNewsletterPreview({
     : 'system-ui, sans-serif'
 
   // Base CSS vars from brand kit only (edition overrides are merged client-side for live updates)
+  const textColor = brandKit?.textColor ?? '#10263B'
   const baseStyleVars: Record<string, string> = {
     '--brand-primary': brandKit?.primaryColor ?? '#006938',
     '--brand-secondary': brandKit?.secondaryColor ?? '#1a5c38',
     '--brand-bg': brandKit?.bgColor ?? '#f5f5f0',
     '--brand-accent': brandKit?.accentColor ?? brandKit?.secondaryColor ?? '#1a5c38',
-    '--brand-text': brandKit?.textColor ?? '#10263B',
-    '--font-heading': fontHeadingFamily,
-    '--font-body': fontBodyFamily,
+    '--brand-text': textColor,
+    '--text': textColor,                  // legacy alias used in older component CSS
     '--brand-heading-size': brandKit?.headingFontSize ?? '22px',
     '--brand-body-size': brandKit?.bodyFontSize ?? '13px',
     '--brand-radius': brandKit?.cardBorderRadius ?? '6px',
+    '--brand-divider': '#d1d5db',         // default subtle divider (overridable via dividerColor token)
+    '--brand-text-muted': '#555555',      // default muted/caption text (overridable via mutedTextColor token)
+    '--font-heading': fontHeadingFamily,
+    '--font-body': fontBodyFamily,
   }
 
   const googleFontsLinks: string[] = []

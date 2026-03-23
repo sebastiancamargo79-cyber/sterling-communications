@@ -45,7 +45,7 @@
 
 .officeName {
   font-size: 9pt;
-  color: #555;
+  color: var(--brand-text-muted, #555);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }

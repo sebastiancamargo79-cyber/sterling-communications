@@ -6,6 +6,7 @@ import type { Newsletter } from '@/lib/newsletter-schema'
 import type { ModuleDef } from '@/lib/module-registry'
 import { extractVariantFromYaml, setVariantInYaml, serializeModuleArray } from '@/lib/module-parser'
 import ModuleDesignOverlay from '../editor/ModuleDesignOverlay'
+import FullPageDesignPanel from '../editor/FullPageDesignPanel'
 import BrokenImageHandler from '@/components/newsletter/BrokenImageHandler'
 import Page1Cover from '@/components/newsletter/Page1Cover'
 import Page1CoverAlt from '@/components/newsletter/Page1CoverAlt'
@@ -24,18 +25,26 @@ import { PrintButton } from '@/components/newsletter/PrintButton'
 import { DownloadPdfButton } from '@/components/newsletter/DownloadPdfButton'
 import styles from './PreviewClient.module.css'
 
-function tokenToCssVar(token: string): string | null {
-  const map: Record<string, string> = {
-    primaryColor: '--brand-primary',
-    secondaryColor: '--brand-secondary',
-    bgColor: '--brand-bg',
-    accentColor: '--brand-accent',
-    textColor: '--brand-text',
-    headingFontSize: '--brand-heading-size',
-    bodyFontSize: '--brand-body-size',
-    cardBorderRadius: '--brand-radius',
+// Brand kit tokens — only these can be promoted to the permanent brand kit
+const BRAND_KIT_TOKENS = new Set([
+  'primaryColor', 'secondaryColor', 'bgColor', 'accentColor', 'textColor',
+  'headingFontSize', 'bodyFontSize', 'cardBorderRadius', 'fontHeadingName', 'fontBodyName',
+])
+
+function tokenToCssVars(token: string): string[] {
+  const map: Record<string, string[]> = {
+    primaryColor: ['--brand-primary'],
+    secondaryColor: ['--brand-secondary'],
+    bgColor: ['--brand-bg'],
+    accentColor: ['--brand-accent'],
+    textColor: ['--brand-text', '--text'],   // --text is the legacy alias used in older components
+    headingFontSize: ['--brand-heading-size'],
+    bodyFontSize: ['--brand-body-size'],
+    cardBorderRadius: ['--brand-radius'],
+    dividerColor: ['--brand-divider'],
+    mutedTextColor: ['--brand-text-muted'],
   }
-  return map[token] ?? null
+  return map[token] ?? []
 }
 
 type UndoAction =
@@ -110,6 +119,7 @@ export default function PreviewClient({
   const [undoStack, setUndoStack] = useState<UndoAction[]>([])
   const [isDirty, setIsDirty] = useState(false)
   const [designOverlayModule, setDesignOverlayModule] = useState<string | null>(null)
+  const [fullPageDesignOpen, setFullPageDesignOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const variantMap = useMemo(() => {
@@ -128,8 +138,9 @@ export default function PreviewClient({
       } else if (token === 'fontBodyName') {
         vars['--font-body'] = `'${value}', sans-serif`
       } else {
-        const cssVar = tokenToCssVar(token)
-        if (cssVar && value) vars[cssVar] = value
+        for (const cssVar of tokenToCssVars(token)) {
+          if (value) vars[cssVar] = value
+        }
       }
     }
     return vars
@@ -218,12 +229,49 @@ export default function PreviewClient({
     }
   }, [clientId, editionId, localOverrides, localRawBlocks])
 
+  const handleReset = useCallback(() => {
+    if (Object.keys(localOverrides).length === 0) return
+    if (!window.confirm('Reset all design changes and return to brand kit defaults?')) return
+    setLocalOverrides({})
+    setUndoStack([])
+    setIsDirty(true)
+    toast.success('Reset to brand kit defaults')
+  }, [localOverrides])
+
+  const handlePromoteToBrandKit = useCallback(async () => {
+    const promotable = Object.fromEntries(
+      Object.entries(localOverrides).filter(([k]) => BRAND_KIT_TOKENS.has(k))
+    )
+    if (Object.keys(promotable).length === 0) {
+      toast('No promotable design changes')
+      return
+    }
+    if (!window.confirm('Save these design tokens as the permanent brand kit? This affects all future newsletters.')) return
+    try {
+      const res = await fetch(`/api/clients/${clientId}/brand-kit`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(promotable),
+      })
+      if (!res.ok) throw new Error('Failed')
+      toast.success('Design promoted to brand kit')
+    } catch {
+      toast.error('Failed to update brand kit')
+    }
+  }, [clientId, localOverrides])
+
   const overlayBlock = designOverlayModule
     ? localRawBlocks.find((b) => b.name === designOverlayModule)
     : null
   const overlayDef = designOverlayModule
     ? allModuleDefs.find((m) => m.name === designOverlayModule)
     : null
+
+  // Opening a module design panel closes the full-page panel and vice-versa
+  const handleModuleDesignClick = useCallback((name: string | null) => {
+    setDesignOverlayModule(name)
+    if (name) setFullPageDesignOpen(false)
+  }, [])
 
   const renderModule = useCallback((moduleName: string): React.ReactNode => {
     const storageKey = KNOWN_STORAGE_KEYS[moduleName]
@@ -238,7 +286,7 @@ export default function PreviewClient({
         <ModuleWrapper
           key={moduleName}
           moduleName={moduleName}
-          onDesignClick={setDesignOverlayModule}
+          onDesignClick={handleModuleDesignClick}
           isDesignOpen={designOverlayModule === moduleName}
         >
           <GenericModuleCard moduleName={moduleName} label={moduleDef?.label ?? moduleName} yaml={block.yaml} />
@@ -250,7 +298,7 @@ export default function PreviewClient({
       case 'cover':
         if (!parsedData.cover) return null
         return (
-          <ModuleWrapper key="cover" moduleName="Cover" onDesignClick={setDesignOverlayModule} isDesignOpen={designOverlayModule === 'Cover'}>
+          <ModuleWrapper key="cover" moduleName="Cover" onDesignClick={handleModuleDesignClick} isDesignOpen={designOverlayModule === 'Cover'}>
             {alt
               ? <Page1CoverAlt data={parsedData.cover} meta={parsedData.meta} logoUrl={logoUrl} />
               : <Page1Cover data={parsedData.cover} meta={parsedData.meta} logoUrl={logoUrl} />}
@@ -259,7 +307,7 @@ export default function PreviewClient({
       case 'director_update':
         if (!parsedData.director_update) return null
         return (
-          <ModuleWrapper key="director_update" moduleName="DirectorUpdate" onDesignClick={setDesignOverlayModule} isDesignOpen={designOverlayModule === 'DirectorUpdate'}>
+          <ModuleWrapper key="director_update" moduleName="DirectorUpdate" onDesignClick={handleModuleDesignClick} isDesignOpen={designOverlayModule === 'DirectorUpdate'}>
             {alt
               ? <Page2DirectorUpdateAlt data={parsedData.director_update} meta={parsedData.meta} />
               : <Page2DirectorUpdate data={parsedData.director_update} meta={parsedData.meta} />}
@@ -268,7 +316,7 @@ export default function PreviewClient({
       case 'events':
         if (!parsedData.events) return null
         return (
-          <ModuleWrapper key="events" moduleName="Events" onDesignClick={setDesignOverlayModule} isDesignOpen={designOverlayModule === 'Events'}>
+          <ModuleWrapper key="events" moduleName="Events" onDesignClick={handleModuleDesignClick} isDesignOpen={designOverlayModule === 'Events'}>
             {alt
               ? <Page3DiaryAlt events={parsedData.events} meta={parsedData.meta} />
               : <Page3Diary events={parsedData.events} meta={parsedData.meta} />}
@@ -277,7 +325,7 @@ export default function PreviewClient({
       case 'client_story':
         if (!parsedData.client_story) return null
         return (
-          <ModuleWrapper key="client_story" moduleName="ClientStory" onDesignClick={setDesignOverlayModule} isDesignOpen={designOverlayModule === 'ClientStory'}>
+          <ModuleWrapper key="client_story" moduleName="ClientStory" onDesignClick={handleModuleDesignClick} isDesignOpen={designOverlayModule === 'ClientStory'}>
             {alt
               ? <Page4ClientStoryAlt data={parsedData.client_story} meta={parsedData.meta} />
               : <Page4ClientStory data={parsedData.client_story} meta={parsedData.meta} />}
@@ -286,7 +334,7 @@ export default function PreviewClient({
       case 'spotlight':
         if (!parsedData.spotlight) return null
         return (
-          <ModuleWrapper key="spotlight" moduleName="StaffSpotlight" onDesignClick={setDesignOverlayModule} isDesignOpen={designOverlayModule === 'StaffSpotlight'}>
+          <ModuleWrapper key="spotlight" moduleName="StaffSpotlight" onDesignClick={handleModuleDesignClick} isDesignOpen={designOverlayModule === 'StaffSpotlight'}>
             {alt
               ? <Page5SpotlightAlt data={parsedData.spotlight} meta={parsedData.meta} employerName={employerName} />
               : <Page5Spotlight data={parsedData.spotlight} meta={parsedData.meta} employerName={employerName} />}
@@ -312,11 +360,21 @@ export default function PreviewClient({
         <span className={styles.printBarTitle}>
           {parsedData.meta.office_name} — {parsedData.meta.month} Newsletter
         </span>
-        {(isDirty || undoStack.length > 0) && (
+        {(isDirty || undoStack.length > 0 || Object.keys(localOverrides).length > 0) && (
           <div className={styles.designActions}>
             {undoStack.length > 0 && (
-              <button className={styles.btnUndo} onClick={handleUndo}>
+              <button className={styles.btnUndo} onClick={handleUndo} title="Undo last change">
                 ⟲ Undo
+              </button>
+            )}
+            {Object.keys(localOverrides).length > 0 && (
+              <button className={styles.btnReset} onClick={handleReset} title="Clear all design overrides">
+                ↺ Reset
+              </button>
+            )}
+            {Object.keys(localOverrides).length > 0 && (
+              <button className={styles.btnPromote} onClick={handlePromoteToBrandKit} title="Save this design as the permanent brand kit">
+                → Brand Kit
               </button>
             )}
             {isDirty && (
@@ -326,6 +384,16 @@ export default function PreviewClient({
             )}
           </div>
         )}
+        <button
+          className={styles.btnRedesign}
+          onClick={() => {
+            setFullPageDesignOpen((prev) => !prev)
+            setDesignOverlayModule(null)
+          }}
+          title="Open full-page design studio"
+        >
+          {fullPageDesignOpen ? '✕ Design Studio' : '✨ Redesign'}
+        </button>
         <DownloadPdfButton clientId={clientId} />
         <PrintButton />
       </div>
@@ -348,7 +416,7 @@ export default function PreviewClient({
                   <ModuleWrapper
                     key="tips_community"
                     moduleName="Tips"
-                    onDesignClick={setDesignOverlayModule}
+                    onDesignClick={handleModuleDesignClick}
                     isDesignOpen={designOverlayModule === 'Tips'}
                   >
                     {alt
@@ -374,6 +442,16 @@ export default function PreviewClient({
           onClose={() => setDesignOverlayModule(null)}
           onApplyToken={handleApplyToken}
           onApplyVariant={handleApplyVariant}
+        />
+      )}
+
+      {fullPageDesignOpen && (
+        <FullPageDesignPanel
+          clientId={clientId}
+          moduleNames={moduleOrder.filter((n) => n !== 'Meta')}
+          editionOverrides={localOverrides}
+          onClose={() => setFullPageDesignOpen(false)}
+          onApplyToken={handleApplyToken}
         />
       )}
     </div>

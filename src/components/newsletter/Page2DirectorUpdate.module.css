@@ -49,5 +49,5 @@
 
 .sigTitle {
   font-size: 9pt;
-  color: #555;
+  color: var(--brand-text-muted, #555);
 }
