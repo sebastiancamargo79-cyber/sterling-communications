@@ -27,6 +27,18 @@ const chatMessageSchema = z.object({
 
 type ChatMessage = z.infer<typeof chatMessageSchema>
 
+const assistantResponseSchema = z.object({
+  message: z.string().default(''),
+  changes: z.array(
+    z.object({
+      token: z.string(),
+      before: z.string().nullable(),
+      after: z.string(),
+      reason: z.string(),
+    })
+  ).default([]),
+})
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -109,6 +121,7 @@ ALWAYS respond with valid JSON only. No markdown, no code blocks.`
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       max_tokens: 1024,
+      response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages.map((m) => ({
@@ -121,7 +134,7 @@ ALWAYS respond with valid JSON only. No markdown, no code blocks.`
     const responseText = completion.choices[0]?.message?.content ?? '{}'
 
     // Parse JSON response
-    let parsedResponse
+    let parsedResponse: unknown
     try {
       parsedResponse = JSON.parse(responseText)
     } catch {
@@ -131,13 +144,23 @@ ALWAYS respond with valid JSON only. No markdown, no code blocks.`
       )
     }
 
-    const { message: assistantMessage = '', changes = [] } = parsedResponse
+    const responseParsed = assistantResponseSchema.safeParse(parsedResponse)
+    if (!responseParsed.success) {
+      return NextResponse.json(
+        { error: `Invalid AI response shape: ${JSON.stringify(responseParsed.error.flatten())}` },
+        { status: 500 }
+      )
+    }
+
+    const allowedTokens = new Set(Object.keys(currentTokens))
+    const normalizedChanges = responseParsed.data.changes.filter((change) => allowedTokens.has(change.token))
+    const assistantMessage = responseParsed.data.message
 
     // Append assistant message to conversation
     const assistantEntry: ChatMessage = {
       role: 'assistant',
       content: assistantMessage,
-      changes,
+      changes: normalizedChanges,
     }
     messages.push(assistantEntry)
 
@@ -160,7 +183,7 @@ ALWAYS respond with valid JSON only. No markdown, no code blocks.`
 
     return NextResponse.json({
       message: assistantMessage,
-      changes,
+      changes: normalizedChanges,
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)

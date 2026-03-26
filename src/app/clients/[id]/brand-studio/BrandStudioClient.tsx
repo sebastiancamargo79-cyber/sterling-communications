@@ -285,22 +285,26 @@ export default function BrandStudioClient({
   }
 
   const handleChatSend = async () => {
-    if (!chatInput.trim()) return
+    const trimmedInput = chatInput.trim()
+    if (!trimmedInput) return
     setChatLoading(true)
     try {
       const res = await fetch(`/api/clients/${clientId}/brand-kit/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: chatInput, currentTokens: tokens }),
+        body: JSON.stringify({ message: trimmedInput, currentTokens: tokens }),
       })
       if (res.ok) {
         const data = await res.json()
         setChatMessages((prev) => [
           ...prev,
-          { role: 'user', content: chatInput },
+          { role: 'user', content: trimmedInput },
           { role: 'assistant', content: data.message, changes: data.changes },
         ])
         setChatInput('')
+      } else {
+        const error = await res.json().catch(() => ({}))
+        toast.error(`Chat request failed: ${error.error ?? res.statusText}`)
       }
     } catch (err) {
       toast.error('Chat error: ' + (err instanceof Error ? err.message : String(err)))
