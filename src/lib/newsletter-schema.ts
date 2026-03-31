@@ -5,11 +5,11 @@ const MetaSchema = z.object({
   office_name: z.string(),
   phone: z.string(),
   website: z.string(),
-  email: z.string().email(),
+  email: z.string(),
 })
 
 const CoverSchema = z.object({
-  hero_image_url: z.string().url(),
+  hero_image_url: z.string().optional(),
   teasers: z.array(z.string().max(40)).min(3).max(5),
   intro_paragraph: z.string().optional(),
 })
@@ -32,7 +32,7 @@ const EventCardSchema = z.object({
 
 const PhotoCardSchema = z.object({
   type: z.literal('photo'),
-  image_url: z.string().url(),
+  image_url: z.string().optional(),
   caption: z.string(),
 })
 
@@ -40,12 +40,12 @@ const EventUnion = z.discriminatedUnion('type', [EventCardSchema, PhotoCardSchem
 
 const ClientStorySchema = z.object({
   headline: z.string(),
-  image_url: z.string().url(),
+  image_url: z.string().optional(),
   body_md: z.string(),
 })
 
 const SpotlightSchema = z.object({
-  image_url: z.string().url(),
+  image_url: z.string().optional(),
   name: z.string(),
   role: z.string(),
   years: z.number().int().positive(),
@@ -54,7 +54,7 @@ const SpotlightSchema = z.object({
 })
 
 const TipsSchema = z.object({
-  image_url: z.string().url(),
+  image_url: z.string().optional(),
   bullets: z.array(z.string()).length(5),
 })
 

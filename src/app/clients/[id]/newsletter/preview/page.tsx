@@ -1,4 +1,3 @@
-import { ZodError } from 'zod'
 import { parseNewsletter, NoDraftError } from '@/lib/newsletter-parser'
 import { extractModuleBlocks } from '@/lib/module-parser'
 import { getAllModuleDefs } from '@/lib/module-registry'
@@ -70,36 +69,6 @@ export default async function ClientNewsletterPreview({
             <p>
               <a href={`/clients/${id}/newsletter/editor`} style={{ color: '#10263B', fontWeight: 600 }}>
                 Go to the editor to create one &rarr;
-              </a>
-            </p>
-          </div>
-        </div>
-      )
-    }
-    if (err instanceof ZodError) {
-      const editorHref = editionId
-        ? `/clients/${id}/newsletter/editor?editionId=${editionId}`
-        : `/clients/${id}/newsletter/editor`
-      return (
-        <div className={styles.wrapper}>
-          <div className={styles.printBar}>
-            <a href={editorHref} className={styles.backLink}>&larr; Back to Editor</a>
-          </div>
-          <div className={styles.errorBox}>
-            <h1>Some required fields are missing</h1>
-            <p>Please fill in the following fields in the editor and try previewing again:</p>
-            <ul>
-              {err.errors.map((e, i) => (
-                <li key={i}>
-                  <span className={styles.fieldPath}>{e.path.join('.')}</span>
-                  {': '}
-                  <span className={styles.fieldMsg}>{e.message}</span>
-                </li>
-              ))}
-            </ul>
-            <p style={{ marginTop: '1.25rem' }}>
-              <a href={editorHref} style={{ color: '#c0392b', fontWeight: 600 }}>
-                &larr; Go back to the editor to fix these
               </a>
             </p>
           </div>
