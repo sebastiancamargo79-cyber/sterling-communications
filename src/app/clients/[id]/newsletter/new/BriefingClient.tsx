@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { extractModuleBlocks } from '@/lib/module-parser'
 import styles from './briefing.module.css'
 
 const OPTIONAL_SECTIONS = [
@@ -29,6 +30,14 @@ interface Message {
   content: string
 }
 
+interface Operation {
+  type: 'update_module' | 'add_module' | 'remove_module' | 'reorder_modules'
+  name?: string
+  yaml?: string
+  after?: string
+  order?: string[]
+}
+
 interface GenerationItem {
   name: string
   label: string
@@ -46,10 +55,38 @@ const INITIAL_MESSAGE: Message = {
   content: `Hi! I'm here to help you plan this edition. What's the vibe or theme you're going for? For example: "Easter themed", "summer wellness focus", or "staff appreciation special".`,
 }
 
+function applyOpsToRaw(
+  rawContent: string,
+  ops: Operation[],
+): string {
+  const blocks = extractModuleBlocks(rawContent)
+  let result = [...blocks]
+
+  for (const op of ops) {
+    if (op.type === 'update_module' && op.name) {
+      result = result.map(b =>
+        b.name === op.name ? { ...b, yaml: op.yaml ?? b.yaml } : b
+      )
+    } else if (op.type === 'reorder_modules' && op.order) {
+      const byName = Object.fromEntries(result.map(b => [b.name, b]))
+      result = op.order.flatMap(n => byName[n] ? [byName[n]] : [])
+    }
+  }
+
+  return result
+    .map(({ name, yaml }) =>
+      `:::module:${name}\n${yaml.endsWith('\n') ? yaml : yaml + '\n'}:::`
+    )
+    .join('\n\n')
+}
+
 export default function BriefingClient({ clientId, clientName, prefillMeta }: Props) {
   const router = useRouter()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const reviewEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const reviewInputRef = useRef<HTMLTextAreaElement>(null)
+  const reviewInitiated = useRef(false)
 
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
@@ -59,15 +96,38 @@ export default function BriefingClient({ clientId, clientName, prefillMeta }: Pr
   const [modulePickerShown, setModulePickerShown] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const [modulesBrief, setModulesBrief] = useState<Record<string, string>>({})
-  const [phase, setPhase] = useState<'chatting' | 'generating'>('chatting')
+  const [phase, setPhase] = useState<'chatting' | 'generating' | 'reviewing'>('chatting')
   const [generationItems, setGenerationItems] = useState<GenerationItem[]>([])
+
+  // Reviewing phase state
+  const [reviewMessages, setReviewMessages] = useState<Message[]>([])
+  const [reviewRawContent, setReviewRawContent] = useState('')
+  const [reviewInput, setReviewInput] = useState('')
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const [editionIdForReview, setEditionIdForReview] = useState<string | null>(null)
+  const [reviewModuleOrder, setReviewModuleOrder] = useState<string[]>([])
+  const [openingInEditor, setOpeningInEditor] = useState(false)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, showingModulePicker, loading])
 
   useEffect(() => {
+    reviewEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [reviewMessages, reviewLoading])
+
+  useEffect(() => {
     if (phase === 'chatting') inputRef.current?.focus()
+    if (phase === 'reviewing') reviewInputRef.current?.focus()
+  }, [phase])
+
+  // Auto-trigger review agent when entering reviewing phase
+  useEffect(() => {
+    if (phase === 'reviewing' && !reviewInitiated.current) {
+      reviewInitiated.current = true
+      callReviewAgent([])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
   const callBriefApi = async (
@@ -111,6 +171,81 @@ export default function BriefingClient({ clientId, clientName, prefillMeta }: Pr
     }
   }
 
+  const callReviewAgent = async (currentReviewMessages: Message[]) => {
+    setReviewLoading(true)
+    try {
+      const moduleOrder = reviewModuleOrder.length > 0
+        ? reviewModuleOrder
+        : extractModuleBlocks(reviewRawContent).map(b => b.name)
+
+      const res = await fetch('/api/newsletter/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            ...messages.map(m => ({ role: m.role, content: m.content })),
+            ...currentReviewMessages,
+          ],
+          rawContent: reviewRawContent,
+          clientId,
+          availableModules: [],
+          currentModuleOrder: moduleOrder,
+          modulesBrief,
+          mode: 'review',
+        }),
+      })
+      const data = await res.json()
+
+      const assistantMsg: Message = { role: 'assistant', content: data.reply }
+      setReviewMessages(prev => [...prev, assistantMsg])
+
+      if (Array.isArray(data.operations) && data.operations.length > 0) {
+        setReviewRawContent(prev => applyOpsToRaw(prev, data.operations))
+      }
+    } catch {
+      setReviewMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' },
+      ])
+    } finally {
+      setReviewLoading(false)
+    }
+  }
+
+  const sendReviewMessage = async (content: string) => {
+    if (!content.trim() || reviewLoading) return
+    const userMsg: Message = { role: 'user', content: content.trim() }
+    const updated = [...reviewMessages, userMsg]
+    setReviewMessages(updated)
+    setReviewInput('')
+    await callReviewAgent(updated)
+  }
+
+  const handleOpenInEditor = async () => {
+    if (!editionIdForReview || openingInEditor) return
+    setOpeningInEditor(true)
+
+    const fullConversation = [
+      ...messages.map(m => ({ role: m.role, content: m.content })),
+      ...reviewMessages.map(m => ({ role: m.role, content: m.content })),
+    ]
+
+    try {
+      await fetch(`/api/clients/${clientId}/newsletter/editions/${editionIdForReview}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rawContent: reviewRawContent,
+          agentConversation: fullConversation,
+        }),
+      })
+    } catch {
+      // Non-fatal — editor can still open with the content written during generation
+    }
+
+    router.push(`/clients/${clientId}/newsletter/editor?editionId=${editionIdForReview}`)
+  }
+
   const sendMessage = async (content: string) => {
     if (!content.trim() || loading) return
     const userMsg: Message = { role: 'user', content: content.trim() }
@@ -148,6 +283,13 @@ export default function BriefingClient({ clientId, clientName, prefillMeta }: Pr
     }
   }
 
+  const handleReviewKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendReviewMessage(reviewInput)
+    }
+  }
+
   const handleGenerate = async () => {
     const modulesToGenerate = ['Cover', ...selectedModules.filter(m => m !== 'Cover')]
 
@@ -160,17 +302,21 @@ export default function BriefingClient({ clientId, clientName, prefillMeta }: Pr
     setPhase('generating')
 
     try {
-      // Create the edition first (with empty content — we'll fill it next)
+      // Create edition and seed with briefing conversation
       const editionRes = await fetch(`/api/clients/${clientId}/newsletter/editions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Untitled Edition', rawContent: ' ' }),
+        body: JSON.stringify({
+          title: 'Untitled Edition',
+          rawContent: ' ',
+          agentConversation: messages.map(m => ({ role: m.role, content: m.content })),
+        }),
       })
       const editionData = await editionRes.json()
       const editionId = editionData.edition?.id
       if (!editionId) throw new Error('Failed to create edition')
 
-      // Build Meta block from prefillMeta (no AI needed)
+      // Build Meta block from prefillMeta
       const month = new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' })
       const metaYaml = [
         `month: "${month}"`,
@@ -220,17 +366,21 @@ export default function BriefingClient({ clientId, clientName, prefillMeta }: Pr
         .map(({ name, yaml }) => `:::module:${name}\n${yaml.endsWith('\n') ? yaml : yaml + '\n'}:::`)
         .join('\n\n')
 
-      // Write content to the edition
+      const moduleOrder = generatedBlocks.map(b => b.name)
+
+      // Write initial content to edition (safe fallback if user navigates away)
       await fetch(`/api/clients/${clientId}/newsletter/editions/${editionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawContent }),
       })
 
-      // Navigate to editor
-      router.push(`/clients/${clientId}/newsletter/editor?editionId=${editionId}`)
+      // Transition to reviewing phase
+      setEditionIdForReview(editionId)
+      setReviewRawContent(rawContent)
+      setReviewModuleOrder(moduleOrder)
+      setPhase('reviewing')
     } catch {
-      // Fall back to chat on error
       setPhase('chatting')
       setGenerationItems([])
     }
@@ -256,6 +406,76 @@ export default function BriefingClient({ clientId, clientName, prefillMeta }: Pr
               </li>
             ))}
           </ul>
+        </div>
+      </div>
+    )
+  }
+
+  // Reviewing phase
+  if (phase === 'reviewing') {
+    return (
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <span className={styles.headerTitle}>New Edition — {clientName}</span>
+          <button
+            className={styles.btnGenerate}
+            onClick={handleOpenInEditor}
+            disabled={reviewLoading || openingInEditor}
+            style={{ fontSize: '0.8rem', padding: '7px 16px' }}
+          >
+            {openingInEditor ? 'Opening…' : 'Open in Editor →'}
+          </button>
+        </div>
+
+        {/* Compact done-modules strip */}
+        <div className={styles.reviewSummary}>
+          {generationItems.map(item => (
+            <span key={item.name} className={styles.reviewSummaryItem}>
+              <span className={styles.reviewSummaryIcon}>✓</span>
+              {item.label}
+            </span>
+          ))}
+        </div>
+
+        {/* Review chat */}
+        <div className={styles.chatArea}>
+          <div className={styles.chatInner}>
+            {reviewMessages.map((msg, i) => (
+              <div key={i} className={styles.messageBubble} data-role={msg.role}>
+                {msg.content}
+              </div>
+            ))}
+            {reviewLoading && (
+              <div className={styles.messageBubble} data-role="assistant">
+                <span className={styles.typingDots}>
+                  <span /><span /><span />
+                </span>
+              </div>
+            )}
+            <div ref={reviewEndRef} />
+          </div>
+        </div>
+
+        <div className={styles.inputArea}>
+          <div className={styles.inputInner}>
+            <textarea
+              ref={reviewInputRef}
+              className={styles.input}
+              value={reviewInput}
+              onChange={e => setReviewInput(e.target.value)}
+              onKeyDown={handleReviewKeyDown}
+              placeholder="Ask for changes... (Enter to send)"
+              rows={1}
+              disabled={reviewLoading || openingInEditor}
+            />
+            <button
+              className={styles.btnSend}
+              onClick={() => sendReviewMessage(reviewInput)}
+              disabled={!reviewInput.trim() || reviewLoading || openingInEditor}
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
     )

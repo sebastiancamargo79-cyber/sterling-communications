@@ -343,3 +343,29 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Review phase — compact done-modules strip */
+.reviewSummary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.reviewSummaryItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.reviewSummaryIcon {
+  font-size: 0.75rem;
+}

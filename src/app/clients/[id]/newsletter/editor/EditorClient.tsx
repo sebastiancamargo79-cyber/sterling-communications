@@ -69,6 +69,7 @@ interface Props {
   editionId?: string
   editionTitle?: string
   moduleDefs: ModuleDef[]
+  initialAgentConversation?: Array<{ role: string; content: string }>
 }
 
 function getModuleDef(name: string, defs: ModuleDef[]): ModuleDef | undefined {
@@ -538,7 +539,7 @@ function ModuleFields({
   )
 }
 
-export default function EditorClient({ initialContent, initialTokenOverrides, clientId, clientName, editionId, editionTitle, moduleDefs }: Props) {
+export default function EditorClient({ initialContent, initialTokenOverrides, clientId, clientName, editionId, editionTitle, moduleDefs, initialAgentConversation = [] }: Props) {
   const router = useRouter()
   const [titleValue, setTitleValue] = useState(editionTitle ?? 'Untitled Edition')
   const [blocks, setBlocks] = useState<ModuleBlock[]>(() => {
@@ -665,7 +666,14 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
       const res = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawContent, tokenOverrides }),
+        body: JSON.stringify({
+          rawContent,
+          tokenOverrides,
+          agentConversation: [
+            ...initialAgentConversation,
+            ...chatMessages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+        }),
         signal: ctrl.signal,
       })
       if (!res.ok) throw new Error('Save failed')
@@ -802,21 +810,39 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
       const rawContent = serializeModuleArray(blocks)
       const existingNames = new Set(blocks.map((b) => b.name))
       const availableModules = moduleDefs.map((m) => m.name).filter((n) => !existingNames.has(n))
-      const res = await fetch('/api/newsletter/chat', {
+      const res = await fetch('/api/newsletter/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
+          messages: [
+            ...initialAgentConversation,
+            ...history.map((m) => ({ role: m.role, content: m.content })),
+          ],
           rawContent,
           clientId,
           availableModules,
           currentModuleOrder: blocks.map((b) => b.name),
+          mode: 'edit',
         }),
       })
       if (!res.ok) throw new Error('Chat request failed')
       const { reply, operations } = await res.json() as { reply: string; operations: ChatOperation[] }
       const assistantMsg: AssistantMessage = { role: 'assistant', content: reply, operations }
+      const newHistory = [...history, { role: 'assistant' as const, content: reply }]
       setChatMessages((prev) => [...prev, assistantMsg])
+      // Persist conversation after each turn (fire-and-forget)
+      if (editionId) {
+        fetch(`/api/clients/${clientId}/newsletter/editions/${editionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentConversation: [
+              ...initialAgentConversation,
+              ...newHistory.map((m) => ({ role: m.role, content: m.content })),
+            ],
+          }),
+        }).catch(() => {})
+      }
     } catch {
       setChatMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
     } finally {

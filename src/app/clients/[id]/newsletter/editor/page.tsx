@@ -28,6 +28,7 @@ export default async function ClientEditorPage({
   let finalEditionId = editionId
   let initialTokenOverrides: Record<string, string> = {}
   let initialEditionTitle = 'Untitled Edition'
+  let initialAgentConversation: Array<{ role: string; content: string }> = []
 
   // Load client name independently
   try {
@@ -107,6 +108,7 @@ export default async function ClientEditorPage({
         rawContent = edition.rawContent
         initialTokenOverrides = (edition.tokenOverrides as Record<string, string>) ?? {}
         initialEditionTitle = edition.title
+        initialAgentConversation = (edition.agentConversation as Array<{ role: string; content: string }>) ?? []
       }
     } catch {
       // fallback to empty
@@ -141,6 +143,7 @@ export default async function ClientEditorPage({
       editionId={finalEditionId}
       editionTitle={initialEditionTitle}
       moduleDefs={moduleDefs}
+      initialAgentConversation={initialAgentConversation}
     />
   )
 }

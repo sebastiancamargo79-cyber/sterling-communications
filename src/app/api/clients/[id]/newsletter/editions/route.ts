@@ -30,11 +30,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { title, rawContent, htmlSnapshot, tokenOverrides } = await req.json() as {
+  const { title, rawContent, htmlSnapshot, tokenOverrides, agentConversation } = await req.json() as {
     title?: string
     rawContent?: string
     htmlSnapshot?: string
     tokenOverrides?: Record<string, string>
+    agentConversation?: Array<{ role: string; content: string }>
   }
 
   const accessCode = generateAccessCode()
@@ -59,6 +60,7 @@ export async function POST(
       title: title?.trim() ?? 'Untitled Edition',
       rawContent: content,
       tokenOverrides: tokenOverrides ?? draftOverrides,
+      agentConversation: agentConversation ?? [],
       accessCode,
       htmlSnapshot: htmlSnapshot ?? null,
       updatedAt: new Date(),

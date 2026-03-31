@@ -10,10 +10,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; editionId: string }> }
 ) {
   const { id, editionId } = await params
-  const { rawContent, title, tokenOverrides } = await req.json() as {
+  const { rawContent, title, tokenOverrides, agentConversation } = await req.json() as {
     rawContent?: string
     title?: string
     tokenOverrides?: Record<string, string>
+    agentConversation?: Array<{ role: string; content: string }>
   }
 
   try {
@@ -36,6 +37,9 @@ export async function PUT(
     }
     if (tokenOverrides !== undefined) {
       updateData.tokenOverrides = tokenOverrides
+    }
+    if (agentConversation !== undefined) {
+      updateData.agentConversation = agentConversation
     }
 
     const [updated] = await db
