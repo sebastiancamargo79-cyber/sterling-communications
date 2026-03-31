@@ -10,7 +10,7 @@ const MetaSchema = z.object({
 
 const CoverSchema = z.object({
   hero_image_url: z.string().optional(),
-  teasers: z.array(z.string().max(40)).min(3).max(5),
+  teasers: z.array(z.string().max(40)).min(1).max(5),
   intro_paragraph: z.string().optional(),
 })
 
@@ -48,7 +48,7 @@ const SpotlightSchema = z.object({
   image_url: z.string().optional(),
   name: z.string(),
   role: z.string(),
-  years: z.number().int().positive(),
+  years: z.number().int().nonnegative(),
   quote: z.string().max(120),
   bio_md: z.string(),
 })
@@ -60,7 +60,7 @@ const TipsSchema = z.object({
 
 const AnniversarySchema = z.object({
   name: z.string(),
-  years: z.number().int().positive(),
+  years: z.number().int().nonnegative(),
   note: z.string().optional(),
 })
 
