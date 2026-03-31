@@ -46,7 +46,7 @@ export default async function ClientWorkspacePage({
                 {brandKit ? ' · Brand kit configured' : ' · No brand kit'}
               </p>
             </div>
-            <Link href={`/clients/${id}/newsletter/editor`} className={styles.btnNewEdition}>
+            <Link href={`/clients/${id}/newsletter/new`} className={styles.btnNewEdition}>
               <Plus size={14} />
               New Edition
             </Link>
@@ -85,7 +85,7 @@ export default async function ClientWorkspacePage({
             <h2 className={styles.sectionTitle}>Editions</h2>
             {editions.length === 0 ? (
               <div className={styles.emptyState}>
-                <p>No editions yet. <Link href={`/clients/${id}/newsletter/editor`}>Create your first edition →</Link></p>
+                <p>No editions yet. <Link href={`/clients/${id}/newsletter/new`}>Create your first edition →</Link></p>
               </div>
             ) : (
               <EditionsClientComponent clientId={id} editions={editions} />
