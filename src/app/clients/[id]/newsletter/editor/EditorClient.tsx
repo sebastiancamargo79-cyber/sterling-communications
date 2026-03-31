@@ -1073,6 +1073,10 @@ export default function EditorClient({ initialContent, initialTokenOverrides, cl
             clientId={clientId}
             editionOverrides={tokenOverrides}
             currentVariant={extractVariantFromYaml(overlayBlock.yaml)}
+            agentConversation={[
+              ...initialAgentConversation,
+              ...chatMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+            ]}
             onClose={() => setDesignOverlayModule(null)}
             onApplyToken={(token, value, scope) => {
               if (scope === 'global') {

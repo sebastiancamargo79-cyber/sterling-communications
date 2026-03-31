@@ -14,12 +14,10 @@ const requestSchema = z.object({
   editionOverrides: z.record(z.string()).default({}),
   message: z.string().min(1),
   history: z
-    .array(
-      z.object({
-        role: z.enum(['user', 'assistant']),
-        content: z.string(),
-      })
-    )
+    .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() }))
+    .default([]),
+  agentConversation: z
+    .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() }))
     .default([]),
 })
 
@@ -39,7 +37,7 @@ export async function POST(
       )
     }
 
-    const { moduleType, moduleContent, currentTokens, editionOverrides, message, history } =
+    const { moduleType, moduleContent, currentTokens, editionOverrides, message, history, agentConversation } =
       parsed.data
 
     // Load client name for context
@@ -157,6 +155,7 @@ Output ONLY the JSON object, nothing else.`
       max_tokens: 1024,
       messages: [
         { role: 'system', content: systemPrompt },
+        ...agentConversation.map((m) => ({ role: m.role, content: m.content })),
         ...history.map((m) => ({ role: m.role, content: m.content })),
         { role: 'user', content: message },
       ],

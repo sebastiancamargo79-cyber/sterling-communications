@@ -76,6 +76,7 @@ interface Props {
   logoUrl?: string
   employerName: string
   allModuleDefs: ModuleDef[]
+  agentConversation?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
 function ModuleWrapper({
@@ -114,6 +115,7 @@ export default function PreviewClient({
   logoUrl,
   employerName,
   allModuleDefs,
+  agentConversation = [],
 }: Props) {
   const [localOverrides, setLocalOverrides] = useState<Record<string, string>>(initialTokenOverrides)
   const [localRawBlocks, setLocalRawBlocks] = useState<RawBlock[]>(initialRawBlocks)
@@ -462,6 +464,7 @@ export default function PreviewClient({
           clientId={clientId}
           editionOverrides={localOverrides}
           currentVariant={variantMap[designOverlayModule] ?? 'classic'}
+          agentConversation={agentConversation}
           onClose={() => setDesignOverlayModule(null)}
           onApplyToken={handleApplyToken}
           onApplyVariant={handleApplyVariant}
@@ -473,6 +476,7 @@ export default function PreviewClient({
           clientId={clientId}
           moduleNames={moduleOrder.filter((n) => n !== 'Meta')}
           editionOverrides={localOverrides}
+          agentConversation={agentConversation}
           onClose={() => setFullPageDesignOpen(false)}
           onApplyToken={handleApplyToken}
         />

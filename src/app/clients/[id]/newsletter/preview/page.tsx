@@ -23,6 +23,7 @@ export default async function ClientNewsletterPreview({
   let moduleOrder: string[] = []
   let rawBlocks: Array<{ name: string; yaml: string }> = []
   let tokenOverrides: Record<string, string> = {}
+  let agentConversation: Array<{ role: 'user' | 'assistant'; content: string }> = []
 
   try {
     if (editionId) {
@@ -43,6 +44,7 @@ export default async function ClientNewsletterPreview({
       rawBlocks = extractModuleBlocks(edition.rawContent)
       moduleOrder = rawBlocks.map((b) => b.name)
       tokenOverrides = (edition.tokenOverrides as Record<string, string>) ?? {}
+      agentConversation = (edition.agentConversation as Array<{ role: 'user' | 'assistant'; content: string }>) ?? []
     } else {
       const draft = await db.query.newsletterDrafts.findFirst({
         where: eq(newsletterDrafts.clientId, id),
@@ -142,6 +144,7 @@ export default async function ClientNewsletterPreview({
         logoUrl={brandKit?.logoUrl ?? undefined}
         employerName={client?.name ?? 'Home Care'}
         allModuleDefs={allModuleDefs}
+        agentConversation={agentConversation}
       />
     </>
   )

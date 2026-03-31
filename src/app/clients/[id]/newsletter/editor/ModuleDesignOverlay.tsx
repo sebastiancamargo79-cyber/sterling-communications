@@ -26,6 +26,7 @@ interface Props {
   clientId: string
   editionOverrides: Record<string, string>
   currentVariant: string
+  agentConversation?: Array<{ role: 'user' | 'assistant'; content: string }>
   onClose: () => void
   onApplyToken: (token: string, value: string, scope: 'edition' | 'global') => void
   onApplyVariant: (variant: string) => void
@@ -42,6 +43,7 @@ export default function ModuleDesignOverlay({
   clientId,
   editionOverrides,
   currentVariant,
+  agentConversation = [],
   onClose,
   onApplyToken,
   onApplyVariant,
@@ -105,6 +107,7 @@ export default function ModuleDesignOverlay({
           editionOverrides,
           message: trimmed,
           history: history.map((m) => ({ role: m.role, content: m.content })),
+          agentConversation,
         }),
       })
 

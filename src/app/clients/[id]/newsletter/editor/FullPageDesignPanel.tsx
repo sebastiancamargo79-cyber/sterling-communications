@@ -23,6 +23,7 @@ interface Props {
   clientId: string
   moduleNames: string[]
   editionOverrides: Record<string, string>
+  agentConversation?: Array<{ role: 'user' | 'assistant'; content: string }>
   onClose: () => void
   onApplyToken: (token: string, value: string, scope: 'edition' | 'global') => void
 }
@@ -46,6 +47,7 @@ export default function FullPageDesignPanel({
   clientId,
   moduleNames,
   editionOverrides,
+  agentConversation = [],
   onClose,
   onApplyToken,
 }: Props) {
@@ -105,6 +107,7 @@ export default function FullPageDesignPanel({
           editionOverrides,
           message: trimmed,
           history: history.map((m) => ({ role: m.role, content: m.content })),
+          agentConversation,
         }),
       })
 
