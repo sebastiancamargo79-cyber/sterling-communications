@@ -1,0 +1,105 @@
+/* Director's Update section */
+.directorHeading {
+  font-size: 16pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  color: var(--brand-primary);
+  margin: 0 0 2mm;
+}
+
+.body {
+  font-size: 9.5pt;
+  line-height: 1.55;
+  color: var(--text);
+  margin-bottom: 2mm;
+}
+
+.body p {
+  margin: 0 0 2mm;
+}
+
+.pullQuote {
+  font-family: var(--font-heading), Georgia, serif;
+  font-style: italic;
+  font-size: 10.5pt;
+  text-align: center;
+  color: var(--brand-secondary);
+  margin: 2mm 8mm;
+  padding: 0;
+  border: none;
+  line-height: 1.5;
+}
+
+.signature {
+  margin-top: 2mm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5mm;
+}
+
+.sigName {
+  font-weight: 700;
+  font-size: 9pt;
+  color: var(--text);
+}
+
+.sigTitle {
+  font-size: 8.5pt;
+  color: var(--brand-text-muted, #555);
+}
+
+/* Events section */
+.eventsHeading {
+  font-size: 14pt;
+  font-weight: 700;
+  font-family: var(--font-heading), Georgia, serif;
+  color: var(--brand-primary);
+  margin: 0 0 2mm;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3mm;
+}
+
+.card {
+  background: var(--brand-bg);
+  padding: 3mm;
+  border-radius: 2px;
+  font-size: 8.5pt;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.eventTitle {
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--brand-primary);
+  margin: 0 0 1mm;
+}
+
+.eventMeta {
+  color: var(--brand-secondary);
+  font-size: 8pt;
+  margin: 0 0 0.5mm;
+}
+
+.eventLocation {
+  color: var(--brand-text-muted, #555);
+  font-size: 8pt;
+  margin: 0 0 0.5mm;
+}
+
+.eventDesc {
+  color: var(--text);
+  margin: 0;
+  font-size: 8pt;
+}
+
+.caption {
+  font-style: italic;
+  color: var(--brand-text-muted, #555);
+  margin: 0;
+  font-size: 8pt;
+}

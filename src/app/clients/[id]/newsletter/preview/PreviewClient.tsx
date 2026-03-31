@@ -12,6 +12,7 @@ import Page1Cover from '@/components/newsletter/Page1Cover'
 import Page1CoverAlt from '@/components/newsletter/Page1CoverAlt'
 import Page2DirectorUpdate from '@/components/newsletter/Page2DirectorUpdate'
 import Page2DirectorUpdateAlt from '@/components/newsletter/Page2DirectorUpdateAlt'
+import Page2DirectorWithEvents from '@/components/newsletter/Page2DirectorWithEvents'
 import Page3Diary from '@/components/newsletter/Page3Diary'
 import Page3DiaryAlt from '@/components/newsletter/Page3DiaryAlt'
 import Page4ClientStory from '@/components/newsletter/Page4ClientStory'
@@ -400,13 +401,35 @@ export default function PreviewClient({
 
       <div className={styles.pages}>
         {(() => {
+          let page2Rendered = false
           let page6Rendered = false
+          const directorIsSparse = (parsedData.director_update?.body_md?.length ?? 9999) < 600
+          const useCombinedPage2 = !!(parsedData.director_update && parsedData.events && directorIsSparse)
           return moduleOrder
             .filter((name) => name !== 'Meta')
             .map((moduleName) => {
               const storageKey = KNOWN_STORAGE_KEYS[moduleName]
               const variant = variantMap[moduleName] ?? 'classic'
               const alt = variant === 'alternate'
+
+              if (useCombinedPage2 && (storageKey === 'director_update' || storageKey === 'events')) {
+                if (page2Rendered) return null
+                page2Rendered = true
+                return (
+                  <ModuleWrapper
+                    key="director_events"
+                    moduleName="DirectorUpdate"
+                    onDesignClick={handleModuleDesignClick}
+                    isDesignOpen={designOverlayModule === 'DirectorUpdate'}
+                  >
+                    <Page2DirectorWithEvents
+                      director={parsedData.director_update!}
+                      events={parsedData.events!}
+                      meta={parsedData.meta}
+                    />
+                  </ModuleWrapper>
+                )
+              }
 
               if (storageKey === 'tips' || storageKey === 'community') {
                 if (page6Rendered) return null

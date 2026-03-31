@@ -67,7 +67,7 @@ Include 3 to 5 teasers that preview newsletter content. Each max 40 characters.`
     aiPromptTemplate: `Write the Director's Update section for a home care franchise newsletter.
 Output only valid YAML with these fields:
 body_md: |
-  [3-4 paragraphs of warm, professional letter from the managing director. Use markdown.]
+  [Write exactly 3 paragraphs of 60–80 words each. Warm, professional tone from the managing director. Use markdown. Do not write more than 3 paragraphs.]
 pull_quote: "[Inspiring quote from the director, max 140 chars]"
 signature_name: "[Director's name]"
 signature_title: "[Director's title]"`,
