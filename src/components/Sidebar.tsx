@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useParams } from 'next/navigation'
 import {
   LayoutDashboard, Users, Settings, ChevronLeft,
-  BookOpen, Palette, Sun, Moon, Award
+  BookOpen, Palette, Sun, Moon
 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 import styles from './sidebar.module.css'
@@ -15,7 +15,6 @@ interface ClientInfo { name: string; primaryColor: string | null }
 const mainNav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/clients', label: 'Clients', icon: Users },
-  { href: '/care-certificate', label: 'Care Certificate', icon: Award },
   { href: '/admin', label: 'Admin', icon: Settings },
 ]
 
